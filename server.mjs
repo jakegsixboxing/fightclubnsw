@@ -3,7 +3,20 @@ import path from "node:path";
 import fs from "node:fs";
 import { fileURLToPath } from "node:url";
 
-import { db, getWeightDivisions, getWeightDivisionById } from "./lib/db.mjs";
+import {
+  db,
+  getWeightDivisions,
+  getWeightDivisionById,
+  createEvent,
+  setEventPhoto,
+  getEvents,
+  getEventById,
+  nominate,
+  withdrawNomination,
+  hasNominated,
+  getNomineesForEvent,
+  getAllFightersWithDivision,
+} from "./lib/db.mjs";
 import {
   createUser,
   findUserByEmail,
@@ -12,9 +25,18 @@ import {
   getUserForToken,
   verifyPassword,
   parseCookies,
+  isAdmin,
 } from "./lib/auth.mjs";
 import { readBody, getBoundary, parseMultipart } from "./lib/multipart.mjs";
-import { saveFighterPhoto, renderFighterPhoto, isAllowedPhotoType, photoExists, uploadsDir } from "./lib/photo.mjs";
+import {
+  saveFighterPhoto,
+  renderFighterPhoto,
+  saveEventPhoto,
+  renderEventPhoto,
+  isAllowedPhotoType,
+  photoExists,
+  uploadsDir,
+} from "./lib/photo.mjs";
 import { layout } from "./lib/layout.mjs";
 import { buildBio } from "./lib/bio.mjs";
 import { titleOverlayText } from "./lib/titles.mjs";
@@ -24,8 +46,14 @@ import {
   loginPage,
   registerPage,
   fighterProfilePage,
-  rosterPage,
+  dashboardPage,
+  fighterProfilesPage,
+  eventsListPage,
+  eventDetailPage,
+  eventFormPage,
 } from "./lib/pages.mjs";
+
+const EVENT_TYPES = ["Amateur", "Pro-Am", "Professional"];
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const publicDir = path.join(__dirname, "public");
@@ -177,9 +205,37 @@ const server = http.createServer(async (req, res) => {
       return;
     }
 
+    // Event banner photos
+    const eventPhotoMatch = pathname.match(/^\/event-photo\/(\d+)$/);
+    if (eventPhotoMatch && req.method === "GET") {
+      const event = getEventById(Number(eventPhotoMatch[1]));
+      if (!event || !event.photo_path || !photoExists(event.photo_path)) {
+        const placeholder = path.join(publicDir, "logo-master.png");
+        const data = fs.readFileSync(placeholder);
+        res.writeHead(200, { "Content-Type": "image/png" });
+        res.end(data);
+        return;
+      }
+      const buf = await renderEventPhoto(event.photo_path);
+      res.writeHead(200, { "Content-Type": "image/jpeg", "Cache-Control": "public, max-age=300" });
+      res.end(buf);
+      return;
+    }
+
+    const admin = isAdmin(user);
+
     // ---------- GET routes ----------
     if (req.method === "GET" && pathname === "/") {
-      return sendHtml(res, 200, layout({ title: "Home", user, body: homePage(), active: "home" }));
+      // Public landing when logged out; members hub when logged in.
+      if (!user) {
+        return sendHtml(res, 200, layout({ title: "Home", user, body: homePage(), active: "home" }));
+      }
+      const fighter = getFighterByUserId(user.id);
+      if (!fighter) return sendRedirect(res, "/register");
+      const fighterCount = db.prepare("SELECT COUNT(*) AS c FROM fighters").get().c;
+      const eventCount = db.prepare("SELECT COUNT(*) AS c FROM events").get().c;
+      const body = dashboardPage({ fighter, isAdmin: admin, fighterCount, eventCount });
+      return sendHtml(res, 200, layout({ title: "Home", user, admin, body, active: "home" }));
     }
 
     if (req.method === "GET" && pathname === "/signup") {
@@ -211,27 +267,61 @@ const server = http.createServer(async (req, res) => {
     }
 
     if (req.method === "GET" && pathname === "/fighters") {
-      const fighters = db
-        .prepare(
-          `SELECT fighters.*, weight_divisions.label AS division_label
-           FROM fighters LEFT JOIN weight_divisions ON weight_divisions.id = fighters.weight_division_id
-           ORDER BY fighters.created_at DESC`
-        )
-        .all();
-      return sendHtml(res, 200, layout({ title: "Fighter Roster", user, body: rosterPage({ fighters }), active: "roster" }));
+      if (!user) return sendRedirect(res, "/login");
+      const fighters = getAllFightersWithDivision();
+      const fightersByDiv = {};
+      for (const f of fighters) {
+        if (f.weight_division_id == null) continue;
+        (fightersByDiv[f.weight_division_id] ||= []).push(f);
+      }
+      const body = fighterProfilesPage({
+        amateurDivisions: getWeightDivisions("amateur"),
+        proDivisions: getWeightDivisions("professional"),
+        fightersByDiv,
+        totalFighters: fighters.length,
+      });
+      return sendHtml(res, 200, layout({ title: "Fighter Profiles", user, admin, body, active: "roster" }));
+    }
+
+    // ---------- Fight night events ----------
+    if (req.method === "GET" && pathname === "/events") {
+      if (!user) return sendRedirect(res, "/login");
+      const events = getEvents();
+      return sendHtml(res, 200, layout({ title: "Upcoming Fight Nights", user, admin, body: eventsListPage({ events, isAdmin: admin }), active: "events" }));
+    }
+
+    if (req.method === "GET" && pathname === "/events/new") {
+      if (!user) return sendRedirect(res, "/login");
+      if (!admin) return sendRedirect(res, "/events");
+      return sendHtml(res, 200, layout({ title: "Create Fight Night", user, admin, body: eventFormPage({}), active: "events" }));
+    }
+
+    const eventMatch = pathname.match(/^\/events\/(\d+)$/);
+    if (req.method === "GET" && eventMatch) {
+      if (!user) return sendRedirect(res, "/login");
+      const event = getEventById(Number(eventMatch[1]));
+      if (!event) {
+        return sendHtml(res, 404, layout({ title: "Not Found", user, admin, body: `<div class="section wrap empty-state"><h2>Fight night not found</h2><a href="/events">Back to fight nights</a></div>` }));
+      }
+      const myFighter = getFighterByUserId(user.id);
+      const nominees = getNomineesForEvent(event.id);
+      const alreadyNominated = myFighter ? hasNominated(event.id, myFighter.id) : false;
+      const body = eventDetailPage({ event, nominees, myFighter, alreadyNominated, isAdmin: admin });
+      return sendHtml(res, 200, layout({ title: event.title, user, admin, body, active: "events" }));
     }
 
     const fighterMatch = pathname.match(/^\/fighters\/(\d+)$/);
     if (req.method === "GET" && fighterMatch) {
+      if (!user) return sendRedirect(res, "/login");
       const fighter = getFighterById(Number(fighterMatch[1]));
       if (!fighter) {
-        return sendHtml(res, 404, layout({ title: "Not Found", user, body: `<div class="section wrap empty-state"><h2>Fighter not found</h2><a href="/fighters">Back to roster</a></div>` }));
+        return sendHtml(res, 404, layout({ title: "Not Found", user, admin, body: `<div class="section wrap empty-state"><h2>Fighter not found</h2><a href="/fighters">Back to profiles</a></div>` }));
       }
       const weightDivision = getWeightDivisionById(fighter.weight_division_id);
       const bio = buildBio(fighter, weightDivision);
       const isOwner = !!user && user.id === fighter.user_id;
       const body = fighterProfilePage({ fighter, weightDivision, bio, isOwner });
-      return sendHtml(res, 200, layout({ title: fighter.full_name, user, body, active: "roster" }));
+      return sendHtml(res, 200, layout({ title: fighter.full_name, user, admin, body, active: "roster" }));
     }
 
     // ---------- POST routes ----------
@@ -364,8 +454,80 @@ const server = http.createServer(async (req, res) => {
       return sendRedirect(res, `/fighters/${fighterId}`);
     }
 
+    // Create a fight night (admin only)
+    if (req.method === "POST" && pathname === "/events") {
+      if (!user) return sendRedirect(res, "/login");
+      if (!admin) return sendRedirect(res, "/events");
+
+      const contentType = req.headers["content-type"] || "";
+      const boundary = getBoundary(contentType);
+      if (!boundary) {
+        return sendHtml(res, 400, layout({ title: "Create Fight Night", user, admin, body: eventFormPage({ error: "Invalid form submission." }) }));
+      }
+      let raw;
+      try {
+        raw = await readBody(req);
+      } catch (e) {
+        return sendHtml(res, 413, layout({ title: "Create Fight Night", user, admin, body: eventFormPage({ error: "Upload too large. Please use a smaller photo (max 12MB)." }) }));
+      }
+      const { fields, files } = parseMultipart(raw, boundary);
+
+      const title = (fields.title || "").trim();
+      const location = (fields.location || "").trim();
+      const eventDate = (fields.event_date || "").trim();
+      const eventType = (fields.event_type || "").trim();
+      if (!title || !location || !eventDate || !eventType) {
+        return sendHtml(res, 400, layout({ title: "Create Fight Night", user, admin, body: eventFormPage({ error: "Please fill in the title, date, night type and town.", values: fields }) }));
+      }
+      if (!EVENT_TYPES.includes(eventType)) {
+        return sendHtml(res, 400, layout({ title: "Create Fight Night", user, admin, body: eventFormPage({ error: "Please choose a valid night type.", values: fields }) }));
+      }
+      const photoFile = files.photo;
+      if (!photoFile || !photoFile.data || photoFile.data.length === 0) {
+        return sendHtml(res, 400, layout({ title: "Create Fight Night", user, admin, body: eventFormPage({ error: "Please upload a photo or poster for the event.", values: fields }) }));
+      }
+      if (!isAllowedPhotoType(photoFile.contentType)) {
+        return sendHtml(res, 400, layout({ title: "Create Fight Night", user, admin, body: eventFormPage({ error: "Event photo must be a JPEG, PNG or WEBP image.", values: fields }) }));
+      }
+
+      const eventId = createEvent({
+        title,
+        location,
+        venue: (fields.venue || "").trim(),
+        event_date: eventDate,
+        event_type: eventType,
+        description: (fields.description || "").trim(),
+        created_by: user.id,
+      });
+      const filename = await saveEventPhoto(eventId, photoFile.data);
+      setEventPhoto(eventId, filename);
+      return sendRedirect(res, `/events/${eventId}`);
+    }
+
+    // Nominate / withdraw
+    const nominateMatch = pathname.match(/^\/events\/(\d+)\/nominate$/);
+    if (req.method === "POST" && nominateMatch) {
+      if (!user) return sendRedirect(res, "/login");
+      const event = getEventById(Number(nominateMatch[1]));
+      if (!event) return sendRedirect(res, "/events");
+      const fighter = getFighterByUserId(user.id);
+      if (!fighter) return sendRedirect(res, "/register");
+      nominate(event.id, fighter.id);
+      return sendRedirect(res, `/events/${event.id}`);
+    }
+
+    const withdrawMatch = pathname.match(/^\/events\/(\d+)\/withdraw$/);
+    if (req.method === "POST" && withdrawMatch) {
+      if (!user) return sendRedirect(res, "/login");
+      const event = getEventById(Number(withdrawMatch[1]));
+      if (!event) return sendRedirect(res, "/events");
+      const fighter = getFighterByUserId(user.id);
+      if (fighter) withdrawNomination(event.id, fighter.id);
+      return sendRedirect(res, `/events/${event.id}`);
+    }
+
     // 404
-    return sendHtml(res, 404, layout({ title: "Not Found", user, body: `<div class="section wrap empty-state"><h2>Page not found</h2><a href="/">Back home</a></div>` }));
+    return sendHtml(res, 404, layout({ title: "Not Found", user, admin, body: `<div class="section wrap empty-state"><h2>Page not found</h2><a href="/">Back home</a></div>` }));
   } catch (err) {
     console.error(err);
     res.writeHead(500, { "Content-Type": "text/plain" });
