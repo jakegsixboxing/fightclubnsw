@@ -4,7 +4,66 @@ document.addEventListener("DOMContentLoaded", () => {
   initTitleFields();
   initTabs();
   initPhotoPreview();
+  initDivisionTabs();
 });
+
+function initDivisionTabs() {
+  const root = document.querySelector("[data-profiles]");
+  if (!root) return;
+
+  const typeButtons = root.querySelectorAll("[data-type-btn]");
+  const pillGroups = root.querySelectorAll("[data-type-group]");
+  const pills = root.querySelectorAll("[data-div-btn]");
+  const cells = root.querySelectorAll("[data-fighter]");
+  const emptyState = root.querySelector("[data-empty]");
+
+  let activeType = "amateur";
+  let activeDiv = { amateur: "all", professional: "all" };
+
+  function apply() {
+    // toggle type buttons
+    typeButtons.forEach((b) =>
+      b.classList.toggle("active", b.getAttribute("data-type-btn") === activeType)
+    );
+    // show the right pill group
+    pillGroups.forEach((g) => {
+      g.hidden = g.getAttribute("data-type-group") !== activeType;
+    });
+    // highlight active pill within active type
+    pills.forEach((p) => {
+      if (p.getAttribute("data-type") !== activeType) return;
+      p.classList.toggle("active", p.getAttribute("data-div") === activeDiv[activeType]);
+    });
+    // filter fighter cells
+    let shown = 0;
+    cells.forEach((c) => {
+      const matchType = c.getAttribute("data-type") === activeType;
+      const div = activeDiv[activeType];
+      const matchDiv = div === "all" || c.getAttribute("data-div") === div;
+      const visible = matchType && matchDiv;
+      c.style.display = visible ? "" : "none";
+      if (visible) shown++;
+    });
+    if (emptyState) emptyState.hidden = shown !== 0;
+  }
+
+  typeButtons.forEach((b) =>
+    b.addEventListener("click", () => {
+      activeType = b.getAttribute("data-type-btn");
+      apply();
+    })
+  );
+  pills.forEach((p) =>
+    p.addEventListener("click", () => {
+      const type = p.getAttribute("data-type");
+      activeType = type;
+      activeDiv[type] = p.getAttribute("data-div");
+      apply();
+    })
+  );
+
+  apply();
+}
 
 function initBoxerTypeWeights() {
   const radios = document.querySelectorAll('input[name="boxer_type"]');
