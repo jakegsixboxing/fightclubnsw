@@ -16,6 +16,18 @@ import {
   hasNominated,
   getNomineesForEvent,
   getAllFightersWithDivision,
+  getFightersForPicker,
+  setAvailability,
+  createMatch,
+  getMatchById,
+  getAllMatchesAdmin,
+  getPendingOffersForFighter,
+  getBoutsForFighter,
+  getConfirmedMatchesForEvent,
+  respondToMatch,
+  confirmMatch,
+  placeMatchOnEvent,
+  cancelMatch,
 } from "./lib/db.mjs";
 import {
   createUser,
@@ -51,6 +63,7 @@ import {
   eventsListPage,
   eventDetailPage,
   eventFormPage,
+  matchmakingPage,
 } from "./lib/pages.mjs";
 
 const EVENT_TYPES = ["Amateur", "Pro-Am", "Professional"];
@@ -234,7 +247,9 @@ const server = http.createServer(async (req, res) => {
       if (!fighter) return sendRedirect(res, "/register");
       const fighterCount = db.prepare("SELECT COUNT(*) AS c FROM fighters").get().c;
       const eventCount = db.prepare("SELECT COUNT(*) AS c FROM events").get().c;
-      const body = dashboardPage({ fighter, isAdmin: admin, fighterCount, eventCount });
+      const pendingOffers = getPendingOffersForFighter(fighter.id);
+      const bouts = getBoutsForFighter(fighter.id);
+      const body = dashboardPage({ fighter, isAdmin: admin, fighterCount, eventCount, pendingOffers, bouts });
       return sendHtml(res, 200, layout({ title: "Home", user, admin, body, active: "home" }));
     }
 
@@ -296,6 +311,18 @@ const server = http.createServer(async (req, res) => {
       return sendHtml(res, 200, layout({ title: "Create Fight Night", user, admin, body: eventFormPage({}), active: "events" }));
     }
 
+    // ---------- Matchmaking (admin) ----------
+    if (req.method === "GET" && pathname === "/matchmaking") {
+      if (!user) return sendRedirect(res, "/login");
+      if (!admin) return sendRedirect(res, "/");
+      const body = matchmakingPage({
+        pickerFighters: getFightersForPicker(),
+        events: getEvents(),
+        matches: getAllMatchesAdmin(),
+      });
+      return sendHtml(res, 200, layout({ title: "Matchmaking", user, admin, body, active: "matchmaking" }));
+    }
+
     const eventMatch = pathname.match(/^\/events\/(\d+)$/);
     if (req.method === "GET" && eventMatch) {
       if (!user) return sendRedirect(res, "/login");
@@ -306,7 +333,8 @@ const server = http.createServer(async (req, res) => {
       const myFighter = getFighterByUserId(user.id);
       const nominees = getNomineesForEvent(event.id);
       const alreadyNominated = myFighter ? hasNominated(event.id, myFighter.id) : false;
-      const body = eventDetailPage({ event, nominees, myFighter, alreadyNominated, isAdmin: admin });
+      const card = getConfirmedMatchesForEvent(event.id);
+      const body = eventDetailPage({ event, nominees, myFighter, alreadyNominated, isAdmin: admin, card });
       return sendHtml(res, 200, layout({ title: event.title, user, admin, body, active: "events" }));
     }
 
@@ -320,7 +348,8 @@ const server = http.createServer(async (req, res) => {
       const weightDivision = getWeightDivisionById(fighter.weight_division_id);
       const bio = buildBio(fighter, weightDivision);
       const isOwner = !!user && user.id === fighter.user_id;
-      const body = fighterProfilePage({ fighter, weightDivision, bio, isOwner });
+      const bouts = getBoutsForFighter(fighter.id);
+      const body = fighterProfilePage({ fighter, weightDivision, bio, isOwner, admin, bouts });
       return sendHtml(res, 200, layout({ title: fighter.full_name, user, admin, body, active: "roster" }));
     }
 
@@ -420,28 +449,29 @@ const server = http.createServer(async (req, res) => {
         title_level: fields.has_title === "yes" ? fields.title_level : null,
         title_region: fields.has_title === "yes" && fields.title_level === "regional" ? (fields.title_region || "").trim() || null : null,
         title_current: fields.has_title === "yes" && fields.title_current === "current" ? 1 : 0,
+        availability: ["open", "selective", "unavailable"].includes(fields.availability) ? fields.availability : "open",
       };
 
       let fighterId;
       if (isEdit) {
         fighterId = existingFighter.id;
         db.prepare(
-          `UPDATE fighters SET full_name=?, gym_name=?, coach_name=?, gym_town=?, gym_postcode=?, boxer_type=?, weight_division_id=?, wins=?, losses=?, draws=?, exhibition_bouts=?, ko_tko_wins=?, has_title=?, title_level=?, title_region=?, title_current=?, updated_at=datetime('now') WHERE id=?`
+          `UPDATE fighters SET full_name=?, gym_name=?, coach_name=?, gym_town=?, gym_postcode=?, boxer_type=?, weight_division_id=?, wins=?, losses=?, draws=?, exhibition_bouts=?, ko_tko_wins=?, has_title=?, title_level=?, title_region=?, title_current=?, availability=?, updated_at=datetime('now') WHERE id=?`
         ).run(
           record.full_name, record.gym_name, record.coach_name, record.gym_town, record.gym_postcode,
           record.boxer_type, record.weight_division_id, record.wins, record.losses, record.draws,
           record.exhibition_bouts, record.ko_tko_wins, record.has_title, record.title_level, record.title_region,
-          record.title_current, fighterId
+          record.title_current, record.availability, fighterId
         );
       } else {
         const info = db.prepare(
-          `INSERT INTO fighters (user_id, full_name, gym_name, coach_name, gym_town, gym_postcode, boxer_type, weight_division_id, wins, losses, draws, exhibition_bouts, ko_tko_wins, has_title, title_level, title_region, title_current)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+          `INSERT INTO fighters (user_id, full_name, gym_name, coach_name, gym_town, gym_postcode, boxer_type, weight_division_id, wins, losses, draws, exhibition_bouts, ko_tko_wins, has_title, title_level, title_region, title_current, availability)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
         ).run(
           user.id, record.full_name, record.gym_name, record.coach_name, record.gym_town, record.gym_postcode,
           record.boxer_type, record.weight_division_id, record.wins, record.losses, record.draws,
           record.exhibition_bouts, record.ko_tko_wins, record.has_title, record.title_level, record.title_region,
-          record.title_current
+          record.title_current, record.availability
         );
         fighterId = Number(info.lastInsertRowid);
       }
@@ -524,6 +554,72 @@ const server = http.createServer(async (req, res) => {
       const fighter = getFighterByUserId(user.id);
       if (fighter) withdrawNomination(event.id, fighter.id);
       return sendRedirect(res, `/events/${event.id}`);
+    }
+
+    // Create a match offer (admin)
+    if (req.method === "POST" && pathname === "/matchmaking") {
+      if (!user) return sendRedirect(res, "/login");
+      if (!admin) return sendRedirect(res, "/");
+      const raw = await readBody(req);
+      const params = new URLSearchParams(raw.toString("utf8"));
+      const aId = Number(params.get("fighter_a_id"));
+      const bId = Number(params.get("fighter_b_id"));
+      const eventId = params.get("event_id") ? Number(params.get("event_id")) : null;
+      const agreedWeight = (params.get("agreed_weight") || "").trim();
+      const note = (params.get("note") || "").trim();
+
+      const renderMM = (opts) =>
+        sendHtml(res, opts.status || 200, layout({ title: "Matchmaking", user, admin, active: "matchmaking",
+          body: matchmakingPage({ pickerFighters: getFightersForPicker(), events: getEvents(), matches: getAllMatchesAdmin(), error: opts.error, success: opts.success }) }));
+
+      const fa = getFighterById(aId);
+      const fb = getFighterById(bId);
+      if (!fa || !fb) return renderMM({ error: "Please pick two valid fighters.", status: 400 });
+      if (aId === bId) return renderMM({ error: "A fighter can't be matched against themselves.", status: 400 });
+
+      createMatch({ fighter_a_id: aId, fighter_b_id: bId, event_id: eventId, proposed_by: user.id, agreed_weight: agreedWeight, note });
+      return renderMM({ success: `Fight offer sent to ${fa.full_name} and ${fb.full_name}. Both must accept before you can confirm it.` });
+    }
+
+    // Fighter responds to an offer
+    const respondMatch = pathname.match(/^\/matches\/(\d+)\/respond$/);
+    if (req.method === "POST" && respondMatch) {
+      if (!user) return sendRedirect(res, "/login");
+      const fighter = getFighterByUserId(user.id);
+      if (!fighter) return sendRedirect(res, "/register");
+      const raw = await readBody(req);
+      const params = new URLSearchParams(raw.toString("utf8"));
+      const response = params.get("response") === "accepted" ? "accepted" : "declined";
+      respondToMatch(Number(respondMatch[1]), fighter.id, response);
+      return sendRedirect(res, "/");
+    }
+
+    // Admin confirm / place / cancel
+    const confirmMatchM = pathname.match(/^\/matches\/(\d+)\/confirm$/);
+    if (req.method === "POST" && confirmMatchM) {
+      if (!user || !admin) return sendRedirect(res, "/");
+      const raw = await readBody(req);
+      const params = new URLSearchParams(raw.toString("utf8"));
+      const eventId = params.get("event_id") ? Number(params.get("event_id")) : null;
+      confirmMatch(Number(confirmMatchM[1]), eventId);
+      return sendRedirect(res, "/matchmaking");
+    }
+
+    const placeMatchM = pathname.match(/^\/matches\/(\d+)\/place$/);
+    if (req.method === "POST" && placeMatchM) {
+      if (!user || !admin) return sendRedirect(res, "/");
+      const raw = await readBody(req);
+      const params = new URLSearchParams(raw.toString("utf8"));
+      const eventId = params.get("event_id") ? Number(params.get("event_id")) : null;
+      placeMatchOnEvent(Number(placeMatchM[1]), eventId);
+      return sendRedirect(res, "/matchmaking");
+    }
+
+    const cancelMatchM = pathname.match(/^\/matches\/(\d+)\/cancel$/);
+    if (req.method === "POST" && cancelMatchM) {
+      if (!user || !admin) return sendRedirect(res, "/");
+      cancelMatch(Number(cancelMatchM[1]));
+      return sendRedirect(res, "/matchmaking");
     }
 
     // 404
