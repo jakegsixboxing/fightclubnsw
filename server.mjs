@@ -218,9 +218,8 @@ const server = http.createServer(async (req, res) => {
         res.end(data);
         return;
       }
-      const div = fighter.weight_division_id ? getWeightDivisionById(fighter.weight_division_id) : null;
-      const overlay = titleOverlayText(fighter, div ? div.name : null);
-      const buf = await renderFighterPhoto(fighter.photo_path, overlay);
+      // No champion banner composited across the photo — clean portrait only.
+      const buf = await renderFighterPhoto(fighter.photo_path);
       res.writeHead(200, { "Content-Type": "image/jpeg", "Cache-Control": "public, max-age=300" });
       res.end(buf);
       return;
