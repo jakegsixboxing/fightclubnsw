@@ -16,23 +16,23 @@
   <rect width="1000" height="1000" fill="url(#bg)"/>
   <circle cx="500" cy="500" r="450" fill="none" stroke="url(#goldring)" stroke-width="13"/>
 
-  <!-- WAR -->
-  <g transform="translate(500,455) scale(1,1.9)" text-anchor="middle" font-family="DejaVu Sans" font-weight="bold">
-    <text x="0" y="0" font-size="200" transform="scale(0.82,1)" fill="url(#white)" letter-spacing="0">WAR</text>
+  <!-- PRIZE -->
+  <g transform="translate(500,452) scale(1,1.9)" text-anchor="middle" font-family="DejaVu Sans" font-weight="bold">
+    <text x="0" y="0" font-size="155" transform="scale(0.70,1)" fill="url(#white)" letter-spacing="-6">PRIZE</text>
   </g>
-  <!-- slash across WAR -->
-  <g transform="rotate(-9 500 398)"><rect x="215" y="398" width="570" height="15" fill="#0a0a0a"/></g>
+  <!-- slash across PRIZE -->
+  <g transform="rotate(-9 500 398)"><rect x="200" y="398" width="600" height="15" fill="#0a0a0a"/></g>
 
-  <!-- CHEST -->
-  <g transform="translate(500,690) scale(1,1.72)" text-anchor="middle" font-family="DejaVu Sans" font-weight="bold">
-    <text x="0" y="0" font-size="150" transform="scale(0.66,1)" fill="url(#gold)" letter-spacing="-4">CHEST</text>
+  <!-- FIGHTER -->
+  <g transform="translate(500,672) scale(1,1.66)" text-anchor="middle" font-family="DejaVu Sans" font-weight="bold">
+    <text x="0" y="0" font-size="150" transform="scale(0.545,1)" fill="url(#gold)" letter-spacing="-4">FIGHTER</text>
   </g>
 
-  <!-- NEW SOUTH WALES banner -->
+  <!-- banner -->
   <g text-anchor="middle">
-    <line x1="243" y1="817" x2="323" y2="817" stroke="url(#goldring)" stroke-width="5"/>
-    <line x1="677" y1="817" x2="757" y2="817" stroke="url(#goldring)" stroke-width="5"/>
-    <text x="500" y="831" font-family="DejaVu Sans" font-weight="bold" font-size="51" fill="url(#white)" letter-spacing="7">NEW SOUTH WALES</text>
+    <line x1="205" y1="812" x2="278" y2="812" stroke="url(#goldring)" stroke-width="5"/>
+    <line x1="722" y1="812" x2="795" y2="812" stroke="url(#goldring)" stroke-width="5"/>
+    <text x="500" y="825" font-family="DejaVu Sans" font-weight="bold" font-size="43" fill="url(#white)" letter-spacing="4">BOXING PROMOTIONS</text>
   </g>
 
   <rect width="1000" height="1000" fill="#000" opacity="0.05" filter="url(#g)"/>

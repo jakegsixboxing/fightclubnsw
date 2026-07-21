@@ -1,4 +1,4 @@
-// Fight Club NSW - client-side interactivity. No build step, no framework.
+// Prizefighter Promotions - client-side interactivity. No build step, no framework.
 document.addEventListener("DOMContentLoaded", () => {
   initBoxerTypeWeights();
   initTitleFields();

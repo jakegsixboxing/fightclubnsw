@@ -3,10 +3,10 @@
   --charcoal: #161616;
   --charcoal-2: #1f1f1f;
   --line: #2c2a24;
-  --gold: #c9992e;
-  --gold-bright: #f0d383;
-  --gold-mid: #d7ad45;
-  --gold-dark: #8f6d1e;
+  --gold: #cc2130;
+  --gold-bright: #ff4552;
+  --gold-mid: #d12435;
+  --gold-dark: #7d1119;
   --off-white: #f3efe4;
   --grey: #a9a49a;
   --red: #a11d1d;
@@ -28,15 +28,15 @@ html, body {
 
 body {
   background-image:
-    radial-gradient(circle at 15% 0%, rgba(212,175,55,0.08), transparent 40%),
-    radial-gradient(circle at 85% 20%, rgba(212,175,55,0.05), transparent 45%);
+    radial-gradient(circle at 15% 0%, rgba(204,33,48,0.08), transparent 40%),
+    radial-gradient(circle at 85% 20%, rgba(204,33,48,0.05), transparent 45%);
   min-height: 100vh;
   display: flex;
   flex-direction: column;
 }
 
 h1, h2, h3, h4, .display {
-  font-family: 'Anton', 'Inter', sans-serif;
+  font-family: 'Cinzel', 'Georgia', serif;
   letter-spacing: 0.03em;
   color: var(--off-white);
   margin: 0 0 0.4em 0;
@@ -80,7 +80,7 @@ a:hover { text-decoration: underline; }
 .brand:hover { text-decoration: none; }
 .brand-logo { height: 48px; width: 48px; }
 .brand-text {
-  font-family: 'Anton', sans-serif;
+  font-family: 'Cinzel', 'Georgia', serif;
   font-size: 1.6rem;
   letter-spacing: 0.06em;
   color: var(--off-white);
@@ -117,7 +117,7 @@ a:hover { text-decoration: underline; }
 .btn:hover { text-decoration: none; transform: translateY(-1px); }
 .btn-gold {
   background: linear-gradient(180deg, var(--gold-bright), var(--gold-dark));
-  color: #1a1400;
+  color: #ffffff;
   border-color: var(--gold-dark);
 }
 .btn-outline {
@@ -147,7 +147,7 @@ a:hover { text-decoration: underline; }
   border-bottom: 1px solid var(--line);
   background:
     linear-gradient(180deg, rgba(0,0,0,0.4), rgba(0,0,0,0.75)),
-    repeating-linear-gradient(135deg, rgba(212,175,55,0.03) 0 2px, transparent 2px 40px);
+    repeating-linear-gradient(135deg, rgba(204,33,48,0.03) 0 2px, transparent 2px 40px);
 }
 .hero-logo { width: 150px; height: 150px; margin-bottom: 18px; filter: drop-shadow(0 8px 20px rgba(0,0,0,0.6)); }
 .hero h1 { font-size: 3.4rem; }
@@ -256,7 +256,7 @@ input:focus, select:focus, textarea:focus {
 .radio-option input { width: auto; }
 .radio-option.checked, .radio-option:has(input:checked) {
   border-color: var(--gold);
-  background: rgba(212,175,55,0.08);
+  background: rgba(204,33,48,0.08);
 }
 
 .flash {
@@ -307,7 +307,7 @@ input:focus, select:focus, textarea:focus {
 .champ-tag {
   display: inline-block;
   background: linear-gradient(180deg, var(--gold-bright), var(--gold-dark));
-  color: #1a1400;
+  color: #ffffff;
   border-radius: 20px;
   padding: 4px 12px;
   font-size: 0.72rem;
@@ -366,7 +366,7 @@ input:focus, select:focus, textarea:focus {
   text-align: center;
   min-width: 80px;
 }
-.stat-box .num { font-family: 'Anton', sans-serif; font-size: 1.8rem; color: var(--gold-bright); display: block; }
+.stat-box .num { font-family: 'Oswald', sans-serif; font-size: 1.8rem; color: var(--gold-bright); display: block; }
 .stat-box .lbl { font-size: 0.72rem; text-transform: uppercase; color: var(--grey); letter-spacing: 0.05em; }
 
 /* Tabs */
@@ -375,7 +375,7 @@ input:focus, select:focus, textarea:focus {
   background: none;
   border: none;
   color: var(--grey);
-  font-family: 'Anton', sans-serif;
+  font-family: 'Oswald', sans-serif;
   font-size: 1.15rem;
   letter-spacing: 0.04em;
   padding: 10px 20px;
@@ -391,7 +391,7 @@ input:focus, select:focus, textarea:focus {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  background: rgba(212,175,55,0.1);
+  background: rgba(204,33,48,0.1);
   border: 1px solid var(--gold-dark);
   border-radius: 8px;
   padding: 10px 16px;
@@ -420,11 +420,11 @@ table.data-table th, table.data-table td {
 table.data-table th { color: var(--gold-bright); text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em; }
 
 /* ============================================================
-   Fight Club NSW — brand treatment layer
+   Prizefighter Promotions — brand treatment layer
    ============================================================ */
 
 /* Anton is wider than the old display font; ease the tracking */
-.brand-text { letter-spacing: 0.02em; font-weight: 400; }
+.brand-text { letter-spacing: 0.01em; font-weight: 400; font-size: 1.25rem; }
 h1, h2, h3, h4, .display { letter-spacing: 0.01em; font-weight: 400; }
 
 /* NEW SOUTH WALES style rule: dash — label — dash */
@@ -459,14 +459,15 @@ h1, h2, h3, h4, .display { letter-spacing: 0.01em; font-weight: 400; }
   position: relative;
   overflow: hidden;
   background:
-    radial-gradient(circle at 50% 30%, rgba(201,153,46,0.14), transparent 42%),
+    radial-gradient(circle at 50% 30%, rgba(204,33,48,0.14), transparent 42%),
     linear-gradient(180deg, rgba(0,0,0,0.35), rgba(0,0,0,0.8)),
-    repeating-linear-gradient(135deg, rgba(201,153,46,0.03) 0 2px, transparent 2px 44px);
+    repeating-linear-gradient(135deg, rgba(204,33,48,0.03) 0 2px, transparent 2px 44px);
 }
 .hero-logo {
-  width: 200px;
-  height: 200px;
-  filter: drop-shadow(0 10px 34px rgba(201,153,46,0.28));
+  width: 210px;
+  height: 210px;
+  border-radius: 26px;
+  filter: drop-shadow(0 12px 40px rgba(204,33,48,0.35));
 }
 .hero h1 { font-size: 4rem; line-height: 0.95; margin-bottom: 8px; }
 @media (max-width: 620px) {
@@ -490,20 +491,20 @@ h1, h2, h3, h4, .display { letter-spacing: 0.01em; font-weight: 400; }
   background: linear-gradient(90deg, transparent, var(--gold), transparent);
 }
 
-/* Header brand logo: subtle gold rim glow */
+/* Header brand logo: rounded-square icon */
 .brand-logo {
-  border-radius: 50%;
-  box-shadow: 0 0 0 1px rgba(201,153,46,0.35), 0 2px 10px rgba(0,0,0,0.5);
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.55);
 }
 
 /* Buttons: warmer gold, subtle sheen */
 .btn-gold {
   background: linear-gradient(180deg, var(--gold-bright) 0%, var(--gold-mid) 45%, var(--gold-dark) 100%);
-  color: #1a1400;
+  color: #ffffff;
   text-shadow: 0 1px 0 rgba(255,255,255,0.25);
-  box-shadow: 0 6px 18px rgba(201,153,46,0.22);
+  box-shadow: 0 6px 18px rgba(204,33,48,0.22);
 }
-.btn-gold:hover { box-shadow: 0 8px 22px rgba(201,153,46,0.34); }
+.btn-gold:hover { box-shadow: 0 8px 22px rgba(204,33,48,0.34); }
 
 /* Feature cards: gold top-edge accent on hover */
 .feature-grid .card {
@@ -516,12 +517,12 @@ h1, h2, h3, h4, .display { letter-spacing: 0.01em; font-weight: 400; }
 }
 
 /* Footer badge a touch larger and glowing */
-.footer-logo { height: 54px; opacity: 0.9; border-radius: 50%; }
+.footer-logo { height: 54px; opacity: 0.9; border-radius: 12px; }
 
 /* Champion overlay text / badges use warm gold */
 .radio-option.checked, .radio-option:has(input:checked) {
   border-color: var(--gold);
-  background: rgba(201,153,46,0.10);
+  background: rgba(204,33,48,0.10);
 }
 
 /* ============================================================
@@ -601,7 +602,7 @@ h1, h2, h3, h4, .display { letter-spacing: 0.01em; font-weight: 400; }
   letter-spacing: 0.06em;
   font-weight: 700;
   color: var(--gold-bright);
-  background: rgba(201,153,46,0.1);
+  background: rgba(204,33,48,0.1);
   border: 1px solid var(--gold-dark);
   border-radius: 999px;
   padding: 4px 12px;
@@ -634,7 +635,7 @@ h1, h2, h3, h4, .display { letter-spacing: 0.01em; font-weight: 400; }
 }
 .type-btn.active {
   background: linear-gradient(180deg, var(--gold-bright), var(--gold-dark));
-  color: #1a1400;
+  color: #ffffff;
 }
 
 .div-pills {
@@ -672,10 +673,10 @@ h1, h2, h3, h4, .display { letter-spacing: 0.01em; font-weight: 400; }
 .div-pill:hover { border-color: var(--gold-dark); }
 .div-pill.active {
   background: linear-gradient(180deg, var(--gold-bright), var(--gold-dark));
-  color: #1a1400;
+  color: #ffffff;
   border-color: var(--gold-dark);
 }
-.div-pill.active em { color: #1a1400; background: rgba(0,0,0,0.15); }
+.div-pill.active em { color: #ffffff; background: rgba(0,0,0,0.15); }
 
 /* Events list */
 .events-list {
@@ -702,7 +703,7 @@ h1, h2, h3, h4, .display { letter-spacing: 0.01em; font-weight: 400; }
   top: 12px;
   left: 12px;
   background: linear-gradient(180deg, var(--gold-bright), var(--gold-dark));
-  color: #1a1400;
+  color: #ffffff;
   font-size: 0.72rem;
   font-weight: 800;
   text-transform: uppercase;
@@ -719,7 +720,7 @@ h1, h2, h3, h4, .display { letter-spacing: 0.01em; font-weight: 400; }
   font-size: 0.75rem;
   font-weight: 700;
   color: var(--gold-bright);
-  background: rgba(201,153,46,0.1);
+  background: rgba(204,33,48,0.1);
   border: 1px solid var(--gold-dark);
   border-radius: 999px;
   padding: 4px 12px;
@@ -788,7 +789,7 @@ h1, h2, h3, h4, .display { letter-spacing: 0.01em; font-weight: 400; }
   letter-spacing: 0.02em;
 }
 .avail-open { background: rgba(63,143,95,0.18); border: 1px solid var(--green-ok); color: #a8e6bd; }
-.avail-selective { background: rgba(201,153,46,0.14); border: 1px solid var(--gold-dark); color: var(--gold-bright); }
+.avail-selective { background: rgba(204,33,48,0.14); border: 1px solid var(--gold-dark); color: var(--gold-bright); }
 .avail-unavailable { background: var(--charcoal-2); border: 1px solid var(--line); color: var(--grey); }
 
 .fighter-card-foot-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
@@ -806,7 +807,7 @@ h1, h2, h3, h4, .display { letter-spacing: 0.01em; font-weight: 400; }
 
 /* Offers banner on dashboard */
 .offers-banner {
-  background: linear-gradient(160deg, rgba(201,153,46,0.08), #101010);
+  background: linear-gradient(160deg, rgba(204,33,48,0.08), #101010);
   border: 1px solid var(--gold-dark);
   border-radius: 14px;
   padding: 22px 24px;
@@ -830,13 +831,13 @@ h1, h2, h3, h4, .display { letter-spacing: 0.01em; font-weight: 400; }
 .mu-side-info { display: flex; flex-direction: column; gap: 2px; }
 .mu-name { font-weight: 700; color: var(--off-white); font-size: 0.98rem; }
 .mu-name:hover { color: var(--gold-bright); text-decoration: none; }
-.mu-record { font-family: 'Anton', sans-serif; color: var(--gold-bright); font-size: 1.15rem; letter-spacing: 0.02em; }
+.mu-record { font-family: 'Oswald', sans-serif; color: var(--gold-bright); font-size: 1.15rem; letter-spacing: 0.02em; }
 .mu-div { color: var(--grey); font-size: 0.75rem; }
-.mu-vs { font-family: 'Anton', sans-serif; color: var(--gold); font-size: 1.4rem; opacity: 0.9; }
+.mu-vs { font-family: 'Cinzel', 'Georgia', serif; color: var(--gold); font-size: 1.4rem; opacity: 0.9; }
 .mu-foot { display: flex; align-items: center; justify-content: center; gap: 12px; margin-top: 14px; flex-wrap: wrap; }
 .mu-status { font-size: 0.78rem; font-weight: 700; padding: 4px 12px; border-radius: 999px; }
 .mu-status.confirmed { background: rgba(63,143,95,0.18); border: 1px solid var(--green-ok); color: #a8e6bd; }
-.mu-status.agreed { background: rgba(201,153,46,0.14); border: 1px solid var(--gold-dark); color: var(--gold-bright); }
+.mu-status.agreed { background: rgba(204,33,48,0.14); border: 1px solid var(--gold-dark); color: var(--gold-bright); }
 .mu-status.proposed { background: var(--charcoal-2); border: 1px solid var(--line); color: var(--grey); }
 .mu-weight { font-size: 0.78rem; color: var(--grey); }
 .mu-note { color: var(--grey); font-size: 0.85rem; text-align: center; margin: 10px 0 0; font-style: italic; }
@@ -863,9 +864,9 @@ h1, h2, h3, h4, .display { letter-spacing: 0.01em; font-weight: 400; }
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: 'Anton', sans-serif;
+  font-family: 'Oswald', sans-serif;
   font-size: 1.5rem;
-  color: #1a1400;
+  color: #ffffff;
   background: linear-gradient(180deg, var(--gold-bright), var(--gold-dark));
   border-radius: 50%;
   border: 3px solid var(--black);
@@ -878,4 +879,140 @@ h1, h2, h3, h4, .display { letter-spacing: 0.01em; font-weight: 400; }
 @media (max-width: 620px) {
   .matchup-list { grid-template-columns: 1fr; }
   .mu-side img { width: 60px; height: 60px; }
+}
+
+/* ============================================================
+   Prize Fighter NSW — sports card, points, confirmed
+   ============================================================ */
+
+/* Tale-of-the-tape fighter card */
+.fightcard {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: 0;
+  background:
+    linear-gradient(180deg, rgba(204,33,48,0.06), transparent 40%),
+    linear-gradient(160deg, #171717 0%, #0d0d0d 100%);
+  border: 1px solid var(--line);
+  border-top: 3px solid var(--gold);
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+}
+.fightcard-photo { position: relative; background: #000; aspect-ratio: 3 / 4; }
+.fightcard-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.fightcard-info { padding: 26px 28px; display: flex; flex-direction: column; }
+.fightcard-tags { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+.fightcard-name {
+  font-family: 'Cinzel', 'Georgia', serif;
+  font-weight: 800;
+  font-size: 2.6rem;
+  line-height: 1;
+  margin: 0 0 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.01em;
+}
+.fightcard-sub {
+  font-family: 'Oswald', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--gold-bright);
+  font-weight: 600;
+  font-size: 0.95rem;
+  margin-bottom: 14px;
+}
+.fightcard-club { color: var(--off-white); font-size: 0.98rem; margin-bottom: 4px; }
+.fightcard-coach { color: var(--grey); font-size: 0.9rem; margin-bottom: 20px; }
+
+/* Tale of the tape strip */
+.tale {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  overflow: hidden;
+  margin-top: auto;
+  background: #0b0b0b;
+}
+.tale-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 14px 6px;
+  border-right: 1px solid var(--line);
+  text-align: center;
+}
+.tale-cell:last-child { border-right: none; }
+.tale-cell:last-child { background: linear-gradient(180deg, rgba(204,33,48,0.16), transparent); }
+.tale-val {
+  font-family: 'Oswald', sans-serif;
+  font-size: 1.7rem;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1;
+}
+.tale-cell:last-child .tale-val { color: var(--gold-bright); }
+.tale-lbl {
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--grey);
+  margin-top: 6px;
+}
+.fightcard-bio { color: var(--grey); font-size: 1rem; margin: 18px 2px 0; max-width: 70ch; }
+
+@media (max-width: 720px) {
+  .fightcard { grid-template-columns: 1fr; }
+  .fightcard-photo { aspect-ratio: 4 / 3; }
+  .fightcard-name { font-size: 2rem; }
+  .tale { grid-template-columns: repeat(4, 1fr); }
+  .tale-cell:nth-child(4) { border-right: none; }
+  .tale-val { font-size: 1.4rem; }
+}
+
+/* Leaderboard / points */
+.points-hero { text-align: center; margin-bottom: 8px; }
+.points-rules {
+  display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin: 16px 0 30px;
+}
+.points-rule {
+  background: var(--charcoal); border: 1px solid var(--line); border-radius: 999px;
+  padding: 8px 16px; font-size: 0.85rem; color: var(--off-white);
+}
+.points-rule b { color: var(--gold-bright); }
+.leaderboard { border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+.lb-row {
+  display: grid; grid-template-columns: 54px 1fr auto; align-items: center; gap: 14px;
+  padding: 12px 16px; border-bottom: 1px solid var(--line); background: var(--charcoal);
+}
+.lb-row:last-child { border-bottom: none; }
+.lb-row.top { background: linear-gradient(90deg, rgba(204,33,48,0.14), var(--charcoal)); }
+.lb-rank { font-family: 'Oswald', sans-serif; font-size: 1.5rem; font-weight: 700; color: var(--gold-bright); text-align: center; }
+.lb-row.top .lb-rank { color: #fff; }
+.lb-fighter { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.lb-fighter img { width: 46px; height: 46px; border-radius: 50%; object-fit: cover; border: 2px solid var(--gold-dark); background:#000; }
+.lb-name { font-weight: 700; color: var(--off-white); }
+.lb-name:hover { color: var(--gold-bright); text-decoration: none; }
+.lb-meta { color: var(--grey); font-size: 0.8rem; }
+.lb-points { text-align: right; }
+.lb-points .n { font-family: 'Oswald', sans-serif; font-size: 1.6rem; font-weight: 700; color: var(--gold-bright); }
+.lb-points .l { display:block; font-size: 0.66rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--grey); }
+
+/* Record-result admin form */
+.result-form { display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin-top:12px; }
+.result-form select, .result-form input { width:auto; min-width: 140px; padding: 8px 10px; }
+.result-recorded { color:#a8e6bd; font-size:0.85rem; font-weight:600; }
+
+/* Weight-group heading in nominations */
+.weight-group { margin-top: 26px; }
+.weight-group-head {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  font-family: 'Oswald', sans-serif; text-transform: uppercase; letter-spacing: 0.06em;
+  color: var(--gold-bright); font-weight: 600; font-size: 0.95rem;
+  border-bottom: 1px solid var(--line); padding-bottom: 6px; margin-bottom: 14px;
+}
+.weight-group-count {
+  font-size: 0.72rem; color: var(--grey); letter-spacing: 0.04em;
+  background: var(--panel-2, rgba(255,255,255,0.04)); padding: 3px 9px; border-radius: 999px;
 }
