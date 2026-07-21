@@ -1,7 +1,7 @@
 {
-  "name": "Fight Club NSW",
-  "short_name": "FC NSW",
-  "description": "Register your interest for Fight Club NSW fight nights.",
+  "name": "WARCHEST NSW",
+  "short_name": "WARCHEST",
+  "description": "WARCHEST NSW — the honest home of NSW combat sports. Real records, fair fights, both fighters agree.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0a0a0a",
