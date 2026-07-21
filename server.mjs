@@ -55,6 +55,7 @@ import {
 } from "./lib/photo.mjs";
 import { layout } from "./lib/layout.mjs";
 import { buildBio } from "./lib/bio.mjs";
+import { seedDemoFighters } from "./lib/seedDemo.mjs";
 import { titleOverlayText } from "./lib/titles.mjs";
 import {
   homePage,
@@ -328,6 +329,19 @@ const server = http.createServer(async (req, res) => {
         matches: getAllMatchesAdmin(),
       });
       return sendHtml(res, 200, layout({ title: "Matchmaking", user, admin, body, active: "matchmaking" }));
+    }
+
+    // ---------- Admin: seed demo fighters (one-time, idempotent) ----------
+    if (req.method === "GET" && pathname === "/admin/seed-demo") {
+      if (!user) return sendRedirect(res, "/login");
+      if (!admin) return sendRedirect(res, "/");
+      const result = await seedDemoFighters();
+      const rows = result.map((r) => `${r.name} — ${r.status}${r.id ? " (#" + r.id + ")" : ""}`).join("<br>");
+      const body = `<section class="section"><div class="wrap"><a href="/fighters" class="back-link">← Fighters</a>
+        <h1 style="text-align:center">Demo fighters seeded</h1>
+        <p style="text-align:center;color:var(--grey)">${rows}</p>
+        <div style="text-align:center;margin-top:20px"><a href="/fighters" class="btn btn-gold">View the roster</a></div></div></section>`;
+      return sendHtml(res, 200, layout({ title: "Seed Demo", user, admin, body, active: "roster" }));
     }
 
     // ---------- Confirmed matches (per event, all events) ----------
