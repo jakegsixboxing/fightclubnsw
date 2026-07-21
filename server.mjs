@@ -28,6 +28,10 @@ import {
   confirmMatch,
   placeMatchOnEvent,
   cancelMatch,
+  getLeaderboard,
+  getFighterPoints,
+  recordMatchResult,
+  getConfirmedMatchesAll,
 } from "./lib/db.mjs";
 import {
   createUser,
@@ -64,6 +68,8 @@ import {
   eventDetailPage,
   eventFormPage,
   matchmakingPage,
+  pointsPage,
+  confirmedPage,
 } from "./lib/pages.mjs";
 
 const EVENT_TYPES = ["Amateur", "Pro-Am", "Professional"];
@@ -205,13 +211,14 @@ const server = http.createServer(async (req, res) => {
     if (photoMatch && req.method === "GET") {
       const fighter = getFighterById(Number(photoMatch[1]));
       if (!fighter || !fighter.photo_path || !photoExists(fighter.photo_path)) {
-        const placeholder = path.join(publicDir, "favicon.svg");
+        const placeholder = path.join(publicDir, "fighter-placeholder.svg");
         const data = fs.readFileSync(placeholder);
-        res.writeHead(200, { "Content-Type": "image/svg+xml" });
+        res.writeHead(200, { "Content-Type": "image/svg+xml", "Cache-Control": "public, max-age=300" });
         res.end(data);
         return;
       }
-      const overlay = titleOverlayText(fighter);
+      const div = fighter.weight_division_id ? getWeightDivisionById(fighter.weight_division_id) : null;
+      const overlay = titleOverlayText(fighter, div ? div.name : null);
       const buf = await renderFighterPhoto(fighter.photo_path, overlay);
       res.writeHead(200, { "Content-Type": "image/jpeg", "Cache-Control": "public, max-age=300" });
       res.end(buf);
@@ -323,6 +330,25 @@ const server = http.createServer(async (req, res) => {
       return sendHtml(res, 200, layout({ title: "Matchmaking", user, admin, body, active: "matchmaking" }));
     }
 
+    // ---------- Confirmed matches (per event, all events) ----------
+    if (req.method === "GET" && pathname === "/confirmed") {
+      if (!user) return sendRedirect(res, "/login");
+      const body = confirmedPage({ matches: getConfirmedMatchesAll(), isAdmin: admin });
+      return sendHtml(res, 200, layout({ title: "Confirmed Matches", user, admin, body, active: "confirmed" }));
+    }
+
+    // ---------- Points / leaderboard ----------
+    if (req.method === "GET" && pathname === "/points") {
+      if (!user) return sendRedirect(res, "/login");
+      const myFighter = getFighterByUserId(user.id);
+      const body = pointsPage({
+        leaderboard: getLeaderboard("2026"),
+        season: "2026",
+        myFighterId: myFighter ? myFighter.id : null,
+      });
+      return sendHtml(res, 200, layout({ title: "Points & Prizes", user, admin, body, active: "points" }));
+    }
+
     const eventMatch = pathname.match(/^\/events\/(\d+)$/);
     if (req.method === "GET" && eventMatch) {
       if (!user) return sendRedirect(res, "/login");
@@ -349,7 +375,8 @@ const server = http.createServer(async (req, res) => {
       const bio = buildBio(fighter, weightDivision);
       const isOwner = !!user && user.id === fighter.user_id;
       const bouts = getBoutsForFighter(fighter.id);
-      const body = fighterProfilePage({ fighter, weightDivision, bio, isOwner, admin, bouts });
+      const points = getFighterPoints(fighter.id, "2026").points;
+      const body = fighterProfilePage({ fighter, weightDivision, bio, isOwner, admin, bouts, points });
       return sendHtml(res, 200, layout({ title: fighter.full_name, user, admin, body, active: "roster" }));
     }
 
@@ -605,6 +632,22 @@ const server = http.createServer(async (req, res) => {
       return sendRedirect(res, "/matchmaking");
     }
 
+    // Admin records the result of a confirmed match → awards points
+    const resultMatchM = pathname.match(/^\/matches\/(\d+)\/result$/);
+    if (req.method === "POST" && resultMatchM) {
+      if (!user || !admin) return sendRedirect(res, "/");
+      const raw = await readBody(req);
+      const params = new URLSearchParams(raw.toString("utf8"));
+      const winnerRaw = params.get("winner_fighter_id") || "";
+      const winnerFighterId = winnerRaw === "draw" || winnerRaw === "" ? null : Number(winnerRaw);
+      const methodRaw = params.get("method") || "Decision";
+      const method = ["Decision", "TKO/KO"].includes(methodRaw) ? methodRaw : "Decision";
+      const fotnRaw = params.get("fotn_fighter_id") || "";
+      const fotnFighterId = fotnRaw === "" ? null : Number(fotnRaw);
+      recordMatchResult({ matchId: Number(resultMatchM[1]), winnerFighterId, method, fotnFighterId });
+      return sendRedirect(res, "/confirmed");
+    }
+
     const placeMatchM = pathname.match(/^\/matches\/(\d+)\/place$/);
     if (req.method === "POST" && placeMatchM) {
       if (!user || !admin) return sendRedirect(res, "/");
@@ -632,5 +675,5 @@ const server = http.createServer(async (req, res) => {
 });
 
 server.listen(PORT, () => {
-  console.log(`Fight Club NSW running at http://localhost:${PORT}`);
+  console.log(`Prizefighter Promotions running at http://localhost:${PORT}`);
 });

@@ -1,7 +1,7 @@
 {
   "name": "fightclubnsw",
   "version": "1.0.0",
-  "description": "Fight Club NSW - fighter registration platform",
+  "description": "Prizefighter Promotions - NSW boxing platform",
   "type": "module",
   "engines": {
     "node": ">=22.5.0"
