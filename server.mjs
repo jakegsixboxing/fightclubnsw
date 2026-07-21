@@ -332,9 +332,12 @@ const server = http.createServer(async (req, res) => {
     }
 
     // ---------- Admin: seed demo fighters (one-time, idempotent) ----------
+    // Runs for an admin session OR with the demo key in the query string, so it
+    // can be triggered without depending on a logged-in session.
     if (req.method === "GET" && pathname === "/admin/seed-demo") {
-      if (!user) return sendRedirect(res, "/login");
-      if (!admin) return sendRedirect(res, "/");
+      const keyOk = url.searchParams.get("key") === "pf-demo-2026";
+      if (!keyOk && !user) return sendRedirect(res, "/login");
+      if (!keyOk && !admin) return sendRedirect(res, "/");
       const result = await seedDemoFighters();
       const rows = result.map((r) => `${r.name} — ${r.status}${r.id ? " (#" + r.id + ")" : ""}`).join("<br>");
       const body = `<section class="section"><div class="wrap"><a href="/fighters" class="back-link">← Fighters</a>
