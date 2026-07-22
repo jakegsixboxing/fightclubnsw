@@ -55,16 +55,26 @@ function initWizard() {
   }
 
   function currentStepValid() {
-    // Fields inside hidden steps are barred from constraint validation
-    // automatically, so this only checks the fields on the visible step.
-    return form.checkValidity();
+    // Only validate fields belonging to the step that's actually visible.
+    // form.checkValidity() checks the WHOLE form, including required fields
+    // on steps the user hasn't reached yet — those are empty, so the whole
+    // form always comes back invalid and the browser silently refuses to
+    // advance (it can't show a validation bubble on a hidden field). Scoping
+    // to just the current step's own fields avoids that trap.
+    const activeEl = stepEls.find((el) => Number(el.getAttribute("data-step")) === currentStep);
+    if (!activeEl) return true;
+    const fields = activeEl.querySelectorAll("input, select, textarea");
+    for (const field of fields) {
+      if (!field.checkValidity()) {
+        field.reportValidity();
+        return false;
+      }
+    }
+    return true;
   }
 
   nextBtn.addEventListener("click", () => {
-    if (!currentStepValid()) {
-      form.reportValidity();
-      return;
-    }
+    if (!currentStepValid()) return;
     if (currentStep < totalSteps) {
       currentStep++;
       render();
