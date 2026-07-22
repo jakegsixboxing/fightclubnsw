@@ -9,12 +9,14 @@ import {
   getWeightDivisionById,
   createEvent,
   setEventPhoto,
+  setEventVideo,
   getEvents,
   getEventById,
   nominate,
   withdrawNomination,
   hasNominated,
   getNomineesForEvent,
+  getMatchingPoolFighters,
   getAllFightersWithDivision,
   getFightersForPicker,
   getFighterByUserId,
@@ -51,7 +53,7 @@ import {
   isAdmin,
 } from "./lib/auth.mjs";
 import { readBody, getBoundary, parseMultipart } from "./lib/multipart.mjs";
-import { saveFighterPhoto, saveEventPhoto, isAllowedPhotoType } from "./lib/photo.mjs";
+import { saveFighterPhoto, saveEventPhoto, saveEventVideo, isAllowedPhotoType, isAllowedVideoType } from "./lib/photo.mjs";
 import { layout } from "./lib/layout.mjs";
 import { buildBio } from "./lib/bio.mjs";
 import { seedDemoFighters, seedDemoMatch } from "./lib/seedDemo.mjs";
@@ -67,6 +69,7 @@ import {
   eventDetailPage,
   eventFormPage,
   matchmakingPage,
+  matchingPoolPage,
   pointsPage,
   confirmedPage,
 } from "./lib/pages.mjs";
@@ -346,6 +349,13 @@ const server = http.createServer(async (req, res) => {
       return sendHtml(res, 200, layout({ title: "Seed Demo", user, admin, body, active: "roster" }));
     }
 
+    // ---------- Matching Pool (tab 3) — everyone currently nominated ----------
+    if (req.method === "GET" && pathname === "/matching-pool") {
+      if (!user) return sendRedirect(res, "/login");
+      const body = matchingPoolPage({ fighters: await getMatchingPoolFighters(), isAdmin: admin });
+      return sendHtml(res, 200, layout({ title: "Matching Pool", user, admin, body, active: "matching-pool" }));
+    }
+
     // ---------- Confirmed matches (per event, all events) ----------
     if (req.method === "GET" && pathname === "/confirmed") {
       if (!user) return sendRedirect(res, "/login");
@@ -525,7 +535,7 @@ const server = http.createServer(async (req, res) => {
       try {
         raw = await readBody(req);
       } catch (e) {
-        return sendHtml(res, 413, layout({ title: "Create Fight Night", user, admin, body: eventFormPage({ error: "Upload too large. Please use a smaller photo (max 12MB)." }) }));
+        return sendHtml(res, 413, layout({ title: "Create Fight Night", user, admin, body: eventFormPage({ error: "Upload too large. Please use a smaller photo/video (max 60MB combined)." }) }));
       }
       const { fields, files } = parseMultipart(raw, boundary);
 
@@ -546,6 +556,10 @@ const server = http.createServer(async (req, res) => {
       if (!isAllowedPhotoType(photoFile.contentType)) {
         return sendHtml(res, 400, layout({ title: "Create Fight Night", user, admin, body: eventFormPage({ error: "Event photo must be a JPEG, PNG or WEBP image.", values: fields }) }));
       }
+      const videoFile = files.video;
+      if (videoFile && videoFile.data && videoFile.data.length > 0 && !isAllowedVideoType(videoFile.contentType)) {
+        return sendHtml(res, 400, layout({ title: "Create Fight Night", user, admin, body: eventFormPage({ error: "Event video must be an MP4, MOV or WEBM file.", values: fields }) }));
+      }
 
       const eventId = await createEvent({
         title,
@@ -558,6 +572,10 @@ const server = http.createServer(async (req, res) => {
       });
       const url = await saveEventPhoto(eventId, photoFile.data);
       await setEventPhoto(eventId, url);
+      if (videoFile && videoFile.data && videoFile.data.length > 0) {
+        const videoUrl = await saveEventVideo(eventId, videoFile.data, videoFile.contentType);
+        await setEventVideo(eventId, videoUrl);
+      }
       return sendRedirect(res, `/events/${eventId}`);
     }
 
@@ -570,7 +588,8 @@ const server = http.createServer(async (req, res) => {
       const fighter = await getFighterByUserId(user.id);
       if (!fighter) return sendRedirect(res, "/register");
       await nominate(event.id, fighter.id);
-      return sendRedirect(res, `/events/${event.id}`);
+      // Nominating immediately moves the fighter's profile into the Matching Pool tab.
+      return sendRedirect(res, "/matching-pool");
     }
 
     const withdrawMatch = pathname.match(/^\/events\/(\d+)\/withdraw$/);
