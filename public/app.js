@@ -5,7 +5,95 @@ document.addEventListener("DOMContentLoaded", () => {
   initTabs();
   initPhotoPreview();
   initDivisionTabs();
+  initWizard();
 });
+
+// Step-by-step wizard for the registration form ("Bang. Bang. Bang." — one
+// clear question at a time instead of one long, dense form).
+function initWizard() {
+  const form = document.querySelector("[data-wizard]");
+  if (!form) return;
+
+  const stepEls = Array.from(form.querySelectorAll(".wizard-step"));
+  const totalSteps = stepEls.length;
+  const dots = Array.from(form.querySelectorAll("[data-wizard-dot]"));
+  const titleEl = form.querySelector("[data-wizard-title]");
+  const subEl = form.querySelector("[data-wizard-sub]");
+  const backBtn = form.querySelector("[data-wizard-back]");
+  const nextBtn = form.querySelector("[data-wizard-next]");
+  const submitBtn = form.querySelector("[data-wizard-submit]");
+  const heading = form.querySelector(".wizard-heading");
+  if (!stepEls.length || !nextBtn) return;
+
+  let currentStep = 1;
+  let firstRender = true;
+
+  function render() {
+    stepEls.forEach((el) => {
+      const step = Number(el.getAttribute("data-step"));
+      el.hidden = step !== currentStep;
+    });
+
+    const activeEl = stepEls.find((el) => Number(el.getAttribute("data-step")) === currentStep);
+    if (activeEl && titleEl) titleEl.textContent = activeEl.getAttribute("data-title") || "";
+    if (activeEl && subEl) subEl.textContent = activeEl.getAttribute("data-sub") || "";
+
+    dots.forEach((d) => {
+      const n = Number(d.getAttribute("data-wizard-dot"));
+      d.classList.toggle("active", n === currentStep);
+      d.classList.toggle("done", n < currentStep);
+    });
+
+    if (backBtn) backBtn.hidden = currentStep === 1;
+    nextBtn.hidden = currentStep === totalSteps;
+    if (submitBtn) submitBtn.hidden = currentStep !== totalSteps;
+
+    if (!firstRender && heading) {
+      heading.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+    firstRender = false;
+  }
+
+  function currentStepValid() {
+    // Fields inside hidden steps are barred from constraint validation
+    // automatically, so this only checks the fields on the visible step.
+    return form.checkValidity();
+  }
+
+  nextBtn.addEventListener("click", () => {
+    if (!currentStepValid()) {
+      form.reportValidity();
+      return;
+    }
+    if (currentStep < totalSteps) {
+      currentStep++;
+      render();
+    }
+  });
+
+  if (backBtn) {
+    backBtn.addEventListener("click", () => {
+      if (currentStep > 1) {
+        currentStep--;
+        render();
+      }
+    });
+  }
+
+  dots.forEach((d) => {
+    d.addEventListener("click", () => {
+      const n = Number(d.getAttribute("data-wizard-dot"));
+      // Only allow jumping backward to a step already completed — keeps the
+      // one-question-at-a-time flow instead of letting people skip ahead.
+      if (n < currentStep) {
+        currentStep = n;
+        render();
+      }
+    });
+  });
+
+  render();
+}
 
 function initDivisionTabs() {
   const root = document.querySelector("[data-profiles]");
