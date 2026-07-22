@@ -7,10 +7,11 @@
     "node": ">=22.5.0"
   },
   "scripts": {
-    "start": "node --experimental-sqlite server.mjs",
-    "dev": "node --experimental-sqlite --watch server.mjs"
+    "start": "node server.mjs",
+    "dev": "node --watch server.mjs"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.45.4",
     "sharp": "^0.34.5"
   }
 }

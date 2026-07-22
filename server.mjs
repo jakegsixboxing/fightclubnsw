@@ -4,7 +4,7 @@ import fs from "node:fs";
 import { fileURLToPath } from "node:url";
 
 import {
-  db,
+  initDb,
   getWeightDivisions,
   getWeightDivisionById,
   createEvent,
@@ -17,6 +17,11 @@ import {
   getNomineesForEvent,
   getAllFightersWithDivision,
   getFightersForPicker,
+  getFighterByUserId,
+  getFighterById,
+  createFighter,
+  updateFighter,
+  setFighterPhoto,
   setAvailability,
   createMatch,
   getMatchById,
@@ -32,6 +37,8 @@ import {
   getFighterPoints,
   recordMatchResult,
   getConfirmedMatchesAll,
+  countFighters,
+  countEvents,
 } from "./lib/db.mjs";
 import {
   createUser,
@@ -44,19 +51,10 @@ import {
   isAdmin,
 } from "./lib/auth.mjs";
 import { readBody, getBoundary, parseMultipart } from "./lib/multipart.mjs";
-import {
-  saveFighterPhoto,
-  renderFighterPhoto,
-  saveEventPhoto,
-  renderEventPhoto,
-  isAllowedPhotoType,
-  photoExists,
-  uploadsDir,
-} from "./lib/photo.mjs";
+import { saveFighterPhoto, saveEventPhoto, isAllowedPhotoType } from "./lib/photo.mjs";
 import { layout } from "./lib/layout.mjs";
 import { buildBio } from "./lib/bio.mjs";
-import { seedDemoFighters } from "./lib/seedDemo.mjs";
-import { titleOverlayText } from "./lib/titles.mjs";
+import { seedDemoFighters, seedDemoMatch } from "./lib/seedDemo.mjs";
 import {
   homePage,
   signupPage,
@@ -120,18 +118,14 @@ function clearSessionCookie() {
   return parts.join("; ");
 }
 
-function getFighterByUserId(userId) {
-  return db.prepare("SELECT * FROM fighters WHERE user_id = ?").get(userId);
-}
-
-function getFighterById(id) {
-  return db.prepare("SELECT * FROM fighters WHERE id = ?").get(id);
-}
-
-function weightDivisionsByTypeJson() {
+async function weightDivisionsByTypeJson() {
+  const [amateur, professional] = await Promise.all([
+    getWeightDivisions("amateur"),
+    getWeightDivisions("professional"),
+  ]);
   return {
-    amateur: getWeightDivisions("amateur").map((d) => ({ id: d.id, label: d.label })),
-    professional: getWeightDivisions("professional").map((d) => ({ id: d.id, label: d.label })),
+    amateur: amateur.map((d) => ({ id: d.id, label: d.label })),
+    professional: professional.map((d) => ({ id: d.id, label: d.label })),
   };
 }
 
@@ -158,7 +152,7 @@ async function serveStatic(req, res, urlPath) {
   });
 }
 
-function validateRegistrationFields(fields) {
+async function validateRegistrationFields(fields) {
   const required = [
     "full_name",
     "gym_name",
@@ -188,7 +182,7 @@ function validateRegistrationFields(fields) {
       return "Please tell us if you are a current or former title holder.";
     }
   }
-  const division = getWeightDivisionById(Number(fields.weight_division_id));
+  const division = await getWeightDivisionById(Number(fields.weight_division_id));
   if (!division || division.boxer_type !== fields.boxer_type) {
     return "Please select a weight division that matches whether you are amateur or professional.";
   }
@@ -200,45 +194,42 @@ const server = http.createServer(async (req, res) => {
     const url = new URL(req.url, `http://${req.headers.host}`);
     const pathname = url.pathname;
     const cookies = parseCookies(req.headers.cookie);
-    const user = getUserForToken(cookies.session);
+    const user = await getUserForToken(cookies.session);
 
     // Static assets
     if (pathname.startsWith("/public/")) {
       return serveStatic(req, res, pathname);
     }
 
-    // Uploaded / rendered fighter photos
+    // Uploaded fighter photos — stored in Supabase Storage; redirect there.
     const photoMatch = pathname.match(/^\/photo\/(\d+)$/);
     if (photoMatch && req.method === "GET") {
-      const fighter = getFighterById(Number(photoMatch[1]));
-      if (!fighter || !fighter.photo_path || !photoExists(fighter.photo_path)) {
+      const fighter = await getFighterById(Number(photoMatch[1]));
+      if (!fighter || !fighter.photo_path) {
         const placeholder = path.join(publicDir, "fighter-placeholder.svg");
         const data = fs.readFileSync(placeholder);
         res.writeHead(200, { "Content-Type": "image/svg+xml", "Cache-Control": "public, max-age=300" });
         res.end(data);
         return;
       }
-      // No champion banner composited across the photo — clean portrait only.
-      const buf = await renderFighterPhoto(fighter.photo_path);
-      res.writeHead(200, { "Content-Type": "image/jpeg", "Cache-Control": "public, max-age=300" });
-      res.end(buf);
+      res.writeHead(302, { Location: fighter.photo_path, "Cache-Control": "public, max-age=300" });
+      res.end();
       return;
     }
 
-    // Event banner photos
+    // Event banner photos — stored in Supabase Storage; redirect there.
     const eventPhotoMatch = pathname.match(/^\/event-photo\/(\d+)$/);
     if (eventPhotoMatch && req.method === "GET") {
-      const event = getEventById(Number(eventPhotoMatch[1]));
-      if (!event || !event.photo_path || !photoExists(event.photo_path)) {
+      const event = await getEventById(Number(eventPhotoMatch[1]));
+      if (!event || !event.photo_path) {
         const placeholder = path.join(publicDir, "logo-master.png");
         const data = fs.readFileSync(placeholder);
         res.writeHead(200, { "Content-Type": "image/png" });
         res.end(data);
         return;
       }
-      const buf = await renderEventPhoto(event.photo_path);
-      res.writeHead(200, { "Content-Type": "image/jpeg", "Cache-Control": "public, max-age=300" });
-      res.end(buf);
+      res.writeHead(302, { Location: event.photo_path, "Cache-Control": "public, max-age=300" });
+      res.end();
       return;
     }
 
@@ -250,12 +241,14 @@ const server = http.createServer(async (req, res) => {
       if (!user) {
         return sendHtml(res, 200, layout({ title: "Home", user, body: homePage(), active: "home" }));
       }
-      const fighter = getFighterByUserId(user.id);
+      const fighter = await getFighterByUserId(user.id);
       if (!fighter) return sendRedirect(res, "/register");
-      const fighterCount = db.prepare("SELECT COUNT(*) AS c FROM fighters").get().c;
-      const eventCount = db.prepare("SELECT COUNT(*) AS c FROM events").get().c;
-      const pendingOffers = getPendingOffersForFighter(fighter.id);
-      const bouts = getBoutsForFighter(fighter.id);
+      const [fighterCount, eventCount, pendingOffers, bouts] = await Promise.all([
+        countFighters(),
+        countEvents(),
+        getPendingOffersForFighter(fighter.id),
+        getBoutsForFighter(fighter.id),
+      ]);
       const body = dashboardPage({ fighter, isAdmin: admin, fighterCount, eventCount, pendingOffers, bouts });
       return sendHtml(res, 200, layout({ title: "Home", user, admin, body, active: "home" }));
     }
@@ -272,17 +265,17 @@ const server = http.createServer(async (req, res) => {
 
     if (req.method === "GET" && pathname === "/me") {
       if (!user) return sendRedirect(res, "/login");
-      const fighter = getFighterByUserId(user.id);
+      const fighter = await getFighterByUserId(user.id);
       if (!fighter) return sendRedirect(res, "/register");
       return sendRedirect(res, `/fighters/${fighter.id}`);
     }
 
     if (req.method === "GET" && pathname === "/register") {
       if (!user) return sendRedirect(res, "/login");
-      const fighter = getFighterByUserId(user.id) || {};
+      const fighter = (await getFighterByUserId(user.id)) || {};
       const body = registerPage({
         fighter,
-        weightDivisionsByType: weightDivisionsByTypeJson(),
+        weightDivisionsByType: await weightDivisionsByTypeJson(),
         isEdit: !!fighter.id,
       });
       return sendHtml(res, 200, layout({ title: "Fighter Profile", user, body, active: "register" }));
@@ -290,15 +283,19 @@ const server = http.createServer(async (req, res) => {
 
     if (req.method === "GET" && pathname === "/fighters") {
       if (!user) return sendRedirect(res, "/login");
-      const fighters = getAllFightersWithDivision();
+      const fighters = await getAllFightersWithDivision();
       const fightersByDiv = {};
       for (const f of fighters) {
         if (f.weight_division_id == null) continue;
         (fightersByDiv[f.weight_division_id] ||= []).push(f);
       }
+      const [amateurDivisions, proDivisions] = await Promise.all([
+        getWeightDivisions("amateur"),
+        getWeightDivisions("professional"),
+      ]);
       const body = fighterProfilesPage({
-        amateurDivisions: getWeightDivisions("amateur"),
-        proDivisions: getWeightDivisions("professional"),
+        amateurDivisions,
+        proDivisions,
         fightersByDiv,
         totalFighters: fighters.length,
       });
@@ -308,7 +305,7 @@ const server = http.createServer(async (req, res) => {
     // ---------- Fight night events ----------
     if (req.method === "GET" && pathname === "/events") {
       if (!user) return sendRedirect(res, "/login");
-      const events = getEvents();
+      const events = await getEvents();
       return sendHtml(res, 200, layout({ title: "Upcoming Fight Nights", user, admin, body: eventsListPage({ events, isAdmin: admin }), active: "events" }));
     }
 
@@ -322,11 +319,12 @@ const server = http.createServer(async (req, res) => {
     if (req.method === "GET" && pathname === "/matchmaking") {
       if (!user) return sendRedirect(res, "/login");
       if (!admin) return sendRedirect(res, "/");
-      const body = matchmakingPage({
-        pickerFighters: getFightersForPicker(),
-        events: getEvents(),
-        matches: getAllMatchesAdmin(),
-      });
+      const [pickerFighters, events, matches] = await Promise.all([
+        getFightersForPicker(),
+        getEvents(),
+        getAllMatchesAdmin(),
+      ]);
+      const body = matchmakingPage({ pickerFighters, events, matches });
       return sendHtml(res, 200, layout({ title: "Matchmaking", user, admin, body, active: "matchmaking" }));
     }
 
@@ -338,10 +336,12 @@ const server = http.createServer(async (req, res) => {
       if (!keyOk && !user) return sendRedirect(res, "/login");
       if (!keyOk && !admin) return sendRedirect(res, "/");
       const result = await seedDemoFighters();
+      const match = await seedDemoMatch();
       const rows = result.map((r) => `${r.name} — ${r.status}${r.id ? " (#" + r.id + ")" : ""}`).join("<br>");
+      const matchRow = `Danny vs Beau match — ${match.status}${match.matchId ? " (#" + match.matchId + ")" : ""}`;
       const body = `<section class="section"><div class="wrap"><a href="/fighters" class="back-link">← Fighters</a>
         <h1 style="text-align:center">Demo fighters seeded</h1>
-        <p style="text-align:center;color:var(--grey)">${rows}</p>
+        <p style="text-align:center;color:var(--grey)">${rows}<br><br>${matchRow}</p>
         <div style="text-align:center;margin-top:20px"><a href="/fighters" class="btn btn-gold">View the roster</a></div></div></section>`;
       return sendHtml(res, 200, layout({ title: "Seed Demo", user, admin, body, active: "roster" }));
     }
@@ -349,16 +349,16 @@ const server = http.createServer(async (req, res) => {
     // ---------- Confirmed matches (per event, all events) ----------
     if (req.method === "GET" && pathname === "/confirmed") {
       if (!user) return sendRedirect(res, "/login");
-      const body = confirmedPage({ matches: getConfirmedMatchesAll(), isAdmin: admin });
+      const body = confirmedPage({ matches: await getConfirmedMatchesAll(), isAdmin: admin });
       return sendHtml(res, 200, layout({ title: "Confirmed Matches", user, admin, body, active: "confirmed" }));
     }
 
     // ---------- Points / leaderboard ----------
     if (req.method === "GET" && pathname === "/points") {
       if (!user) return sendRedirect(res, "/login");
-      const myFighter = getFighterByUserId(user.id);
+      const myFighter = await getFighterByUserId(user.id);
       const body = pointsPage({
-        leaderboard: getLeaderboard("2026"),
+        leaderboard: await getLeaderboard("2026"),
         season: "2026",
         myFighterId: myFighter ? myFighter.id : null,
       });
@@ -368,14 +368,14 @@ const server = http.createServer(async (req, res) => {
     const eventMatch = pathname.match(/^\/events\/(\d+)$/);
     if (req.method === "GET" && eventMatch) {
       if (!user) return sendRedirect(res, "/login");
-      const event = getEventById(Number(eventMatch[1]));
+      const event = await getEventById(Number(eventMatch[1]));
       if (!event) {
         return sendHtml(res, 404, layout({ title: "Not Found", user, admin, body: `<div class="section wrap empty-state"><h2>Fight night not found</h2><a href="/events">Back to fight nights</a></div>` }));
       }
-      const myFighter = getFighterByUserId(user.id);
-      const nominees = getNomineesForEvent(event.id);
-      const alreadyNominated = myFighter ? hasNominated(event.id, myFighter.id) : false;
-      const card = getConfirmedMatchesForEvent(event.id);
+      const myFighter = await getFighterByUserId(user.id);
+      const nominees = await getNomineesForEvent(event.id);
+      const alreadyNominated = myFighter ? await hasNominated(event.id, myFighter.id) : false;
+      const card = await getConfirmedMatchesForEvent(event.id);
       const body = eventDetailPage({ event, nominees, myFighter, alreadyNominated, isAdmin: admin, card });
       return sendHtml(res, 200, layout({ title: event.title, user, admin, body, active: "events" }));
     }
@@ -383,15 +383,15 @@ const server = http.createServer(async (req, res) => {
     const fighterMatch = pathname.match(/^\/fighters\/(\d+)$/);
     if (req.method === "GET" && fighterMatch) {
       if (!user) return sendRedirect(res, "/login");
-      const fighter = getFighterById(Number(fighterMatch[1]));
+      const fighter = await getFighterById(Number(fighterMatch[1]));
       if (!fighter) {
         return sendHtml(res, 404, layout({ title: "Not Found", user, admin, body: `<div class="section wrap empty-state"><h2>Fighter not found</h2><a href="/fighters">Back to profiles</a></div>` }));
       }
-      const weightDivision = getWeightDivisionById(fighter.weight_division_id);
+      const weightDivision = await getWeightDivisionById(fighter.weight_division_id);
       const bio = buildBio(fighter, weightDivision);
       const isOwner = !!user && user.id === fighter.user_id;
-      const bouts = getBoutsForFighter(fighter.id);
-      const points = getFighterPoints(fighter.id, "2026").points;
+      const bouts = await getBoutsForFighter(fighter.id);
+      const points = (await getFighterPoints(fighter.id, "2026")).points;
       const body = fighterProfilePage({ fighter, weightDivision, bio, isOwner, admin, bouts, points });
       return sendHtml(res, 200, layout({ title: fighter.full_name, user, admin, body, active: "roster" }));
     }
@@ -414,8 +414,8 @@ const server = http.createServer(async (req, res) => {
         return sendHtml(res, 400, layout({ title: "Register", user, body: signupPage({ error: "Passwords do not match." }) }));
       }
       try {
-        const userId = createUser(email, password);
-        const { token, expires } = createSession(userId);
+        const userId = await createUser(email, password);
+        const { token, expires } = await createSession(userId);
         return sendRedirect(res, "/register", sessionCookie(token, expires));
       } catch (e) {
         if (e.message === "EMAIL_TAKEN") {
@@ -430,16 +430,16 @@ const server = http.createServer(async (req, res) => {
       const params = new URLSearchParams(raw.toString("utf8"));
       const email = (params.get("email") || "").trim().toLowerCase();
       const password = params.get("password") || "";
-      const found = findUserByEmail(email);
+      const found = await findUserByEmail(email);
       if (!found || !verifyPassword(password, found.password_hash)) {
         return sendHtml(res, 400, layout({ title: "Log In", user, body: loginPage({ error: "Incorrect email or password." }) }));
       }
-      const { token, expires } = createSession(found.id);
+      const { token, expires } = await createSession(found.id);
       return sendRedirect(res, "/me", sessionCookie(token, expires));
     }
 
     if (req.method === "POST" && pathname === "/logout") {
-      if (cookies.session) destroySession(cookies.session);
+      if (cookies.session) await destroySession(cookies.session);
       return sendRedirect(res, "/", clearSessionCookie());
     }
 
@@ -449,30 +449,30 @@ const server = http.createServer(async (req, res) => {
       const contentType = req.headers["content-type"] || "";
       const boundary = getBoundary(contentType);
       if (!boundary) {
-        return sendHtml(res, 400, layout({ title: "Fighter Profile", user, body: registerPage({ fighter: {}, weightDivisionsByType: weightDivisionsByTypeJson(), error: "Invalid form submission." }) }));
+        return sendHtml(res, 400, layout({ title: "Fighter Profile", user, body: registerPage({ fighter: {}, weightDivisionsByType: await weightDivisionsByTypeJson(), error: "Invalid form submission." }) }));
       }
 
       let raw;
       try {
         raw = await readBody(req);
       } catch (e) {
-        return sendHtml(res, 413, layout({ title: "Fighter Profile", user, body: registerPage({ fighter: {}, weightDivisionsByType: weightDivisionsByTypeJson(), error: "Upload too large. Please use a smaller photo (max 12MB)." }) }));
+        return sendHtml(res, 413, layout({ title: "Fighter Profile", user, body: registerPage({ fighter: {}, weightDivisionsByType: await weightDivisionsByTypeJson(), error: "Upload too large. Please use a smaller photo (max 12MB)." }) }));
       }
       const { fields, files } = parseMultipart(raw, boundary);
-      const existingFighter = getFighterByUserId(user.id) || {};
+      const existingFighter = (await getFighterByUserId(user.id)) || {};
       const isEdit = !!existingFighter.id;
 
-      const validationError = validateRegistrationFields(fields);
+      const validationError = await validateRegistrationFields(fields);
       if (validationError) {
-        return sendHtml(res, 400, layout({ title: "Fighter Profile", user, body: registerPage({ fighter: { ...existingFighter, ...fields }, weightDivisionsByType: weightDivisionsByTypeJson(), error: validationError, isEdit }) }));
+        return sendHtml(res, 400, layout({ title: "Fighter Profile", user, body: registerPage({ fighter: { ...existingFighter, ...fields }, weightDivisionsByType: await weightDivisionsByTypeJson(), error: validationError, isEdit }) }));
       }
 
       const photoFile = files.photo;
       if (!isEdit && (!photoFile || !photoFile.data || photoFile.data.length === 0)) {
-        return sendHtml(res, 400, layout({ title: "Fighter Profile", user, body: registerPage({ fighter: fields, weightDivisionsByType: weightDivisionsByTypeJson(), error: "Please upload a clear photo of your face.", isEdit }) }));
+        return sendHtml(res, 400, layout({ title: "Fighter Profile", user, body: registerPage({ fighter: fields, weightDivisionsByType: await weightDivisionsByTypeJson(), error: "Please upload a clear photo of your face.", isEdit }) }));
       }
       if (photoFile && photoFile.data && photoFile.data.length > 0 && !isAllowedPhotoType(photoFile.contentType)) {
-        return sendHtml(res, 400, layout({ title: "Fighter Profile", user, body: registerPage({ fighter: fields, weightDivisionsByType: weightDivisionsByTypeJson(), error: "Photo must be a JPEG, PNG or WEBP image.", isEdit }) }));
+        return sendHtml(res, 400, layout({ title: "Fighter Profile", user, body: registerPage({ fighter: fields, weightDivisionsByType: await weightDivisionsByTypeJson(), error: "Photo must be a JPEG, PNG or WEBP image.", isEdit }) }));
       }
 
       const record = {
@@ -488,40 +488,24 @@ const server = http.createServer(async (req, res) => {
         draws: Number(fields.draws) || 0,
         exhibition_bouts: Number(fields.exhibition_bouts) || 0,
         ko_tko_wins: Number(fields.ko_tko_wins) || 0,
-        has_title: fields.has_title === "yes" ? 1 : 0,
+        has_title: fields.has_title === "yes",
         title_level: fields.has_title === "yes" ? fields.title_level : null,
         title_region: fields.has_title === "yes" && fields.title_level === "regional" ? (fields.title_region || "").trim() || null : null,
-        title_current: fields.has_title === "yes" && fields.title_current === "current" ? 1 : 0,
+        title_current: fields.has_title === "yes" && fields.title_current === "current",
         availability: ["open", "selective", "unavailable"].includes(fields.availability) ? fields.availability : "open",
       };
 
       let fighterId;
       if (isEdit) {
         fighterId = existingFighter.id;
-        db.prepare(
-          `UPDATE fighters SET full_name=?, gym_name=?, coach_name=?, gym_town=?, gym_postcode=?, boxer_type=?, weight_division_id=?, wins=?, losses=?, draws=?, exhibition_bouts=?, ko_tko_wins=?, has_title=?, title_level=?, title_region=?, title_current=?, availability=?, updated_at=datetime('now') WHERE id=?`
-        ).run(
-          record.full_name, record.gym_name, record.coach_name, record.gym_town, record.gym_postcode,
-          record.boxer_type, record.weight_division_id, record.wins, record.losses, record.draws,
-          record.exhibition_bouts, record.ko_tko_wins, record.has_title, record.title_level, record.title_region,
-          record.title_current, record.availability, fighterId
-        );
+        await updateFighter(fighterId, record);
       } else {
-        const info = db.prepare(
-          `INSERT INTO fighters (user_id, full_name, gym_name, coach_name, gym_town, gym_postcode, boxer_type, weight_division_id, wins, losses, draws, exhibition_bouts, ko_tko_wins, has_title, title_level, title_region, title_current, availability)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
-        ).run(
-          user.id, record.full_name, record.gym_name, record.coach_name, record.gym_town, record.gym_postcode,
-          record.boxer_type, record.weight_division_id, record.wins, record.losses, record.draws,
-          record.exhibition_bouts, record.ko_tko_wins, record.has_title, record.title_level, record.title_region,
-          record.title_current, record.availability
-        );
-        fighterId = Number(info.lastInsertRowid);
+        fighterId = await createFighter(user.id, record);
       }
 
       if (photoFile && photoFile.data && photoFile.data.length > 0) {
-        const filename = await saveFighterPhoto(fighterId, photoFile.data);
-        db.prepare("UPDATE fighters SET photo_path=? WHERE id=?").run(filename, fighterId);
+        const url = await saveFighterPhoto(fighterId, photoFile.data);
+        await setFighterPhoto(fighterId, url);
       }
 
       return sendRedirect(res, `/fighters/${fighterId}`);
@@ -563,7 +547,7 @@ const server = http.createServer(async (req, res) => {
         return sendHtml(res, 400, layout({ title: "Create Fight Night", user, admin, body: eventFormPage({ error: "Event photo must be a JPEG, PNG or WEBP image.", values: fields }) }));
       }
 
-      const eventId = createEvent({
+      const eventId = await createEvent({
         title,
         location,
         venue: (fields.venue || "").trim(),
@@ -572,8 +556,8 @@ const server = http.createServer(async (req, res) => {
         description: (fields.description || "").trim(),
         created_by: user.id,
       });
-      const filename = await saveEventPhoto(eventId, photoFile.data);
-      setEventPhoto(eventId, filename);
+      const url = await saveEventPhoto(eventId, photoFile.data);
+      await setEventPhoto(eventId, url);
       return sendRedirect(res, `/events/${eventId}`);
     }
 
@@ -581,21 +565,21 @@ const server = http.createServer(async (req, res) => {
     const nominateMatch = pathname.match(/^\/events\/(\d+)\/nominate$/);
     if (req.method === "POST" && nominateMatch) {
       if (!user) return sendRedirect(res, "/login");
-      const event = getEventById(Number(nominateMatch[1]));
+      const event = await getEventById(Number(nominateMatch[1]));
       if (!event) return sendRedirect(res, "/events");
-      const fighter = getFighterByUserId(user.id);
+      const fighter = await getFighterByUserId(user.id);
       if (!fighter) return sendRedirect(res, "/register");
-      nominate(event.id, fighter.id);
+      await nominate(event.id, fighter.id);
       return sendRedirect(res, `/events/${event.id}`);
     }
 
     const withdrawMatch = pathname.match(/^\/events\/(\d+)\/withdraw$/);
     if (req.method === "POST" && withdrawMatch) {
       if (!user) return sendRedirect(res, "/login");
-      const event = getEventById(Number(withdrawMatch[1]));
+      const event = await getEventById(Number(withdrawMatch[1]));
       if (!event) return sendRedirect(res, "/events");
-      const fighter = getFighterByUserId(user.id);
-      if (fighter) withdrawNomination(event.id, fighter.id);
+      const fighter = await getFighterByUserId(user.id);
+      if (fighter) await withdrawNomination(event.id, fighter.id);
       return sendRedirect(res, `/events/${event.id}`);
     }
 
@@ -611,16 +595,22 @@ const server = http.createServer(async (req, res) => {
       const agreedWeight = (params.get("agreed_weight") || "").trim();
       const note = (params.get("note") || "").trim();
 
-      const renderMM = (opts) =>
-        sendHtml(res, opts.status || 200, layout({ title: "Matchmaking", user, admin, active: "matchmaking",
-          body: matchmakingPage({ pickerFighters: getFightersForPicker(), events: getEvents(), matches: getAllMatchesAdmin(), error: opts.error, success: opts.success }) }));
+      const renderMM = async (opts) => {
+        const [pickerFighters, events, matches] = await Promise.all([
+          getFightersForPicker(),
+          getEvents(),
+          getAllMatchesAdmin(),
+        ]);
+        return sendHtml(res, opts.status || 200, layout({ title: "Matchmaking", user, admin, active: "matchmaking",
+          body: matchmakingPage({ pickerFighters, events, matches, error: opts.error, success: opts.success }) }));
+      };
 
-      const fa = getFighterById(aId);
-      const fb = getFighterById(bId);
+      const fa = await getFighterById(aId);
+      const fb = await getFighterById(bId);
       if (!fa || !fb) return renderMM({ error: "Please pick two valid fighters.", status: 400 });
       if (aId === bId) return renderMM({ error: "A fighter can't be matched against themselves.", status: 400 });
 
-      createMatch({ fighter_a_id: aId, fighter_b_id: bId, event_id: eventId, proposed_by: user.id, agreed_weight: agreedWeight, note });
+      await createMatch({ fighter_a_id: aId, fighter_b_id: bId, event_id: eventId, proposed_by: user.id, agreed_weight: agreedWeight, note });
       return renderMM({ success: `Fight offer sent to ${fa.full_name} and ${fb.full_name}. Both must accept before you can confirm it.` });
     }
 
@@ -628,12 +618,12 @@ const server = http.createServer(async (req, res) => {
     const respondMatch = pathname.match(/^\/matches\/(\d+)\/respond$/);
     if (req.method === "POST" && respondMatch) {
       if (!user) return sendRedirect(res, "/login");
-      const fighter = getFighterByUserId(user.id);
+      const fighter = await getFighterByUserId(user.id);
       if (!fighter) return sendRedirect(res, "/register");
       const raw = await readBody(req);
       const params = new URLSearchParams(raw.toString("utf8"));
       const response = params.get("response") === "accepted" ? "accepted" : "declined";
-      respondToMatch(Number(respondMatch[1]), fighter.id, response);
+      await respondToMatch(Number(respondMatch[1]), fighter.id, response);
       return sendRedirect(res, "/");
     }
 
@@ -644,7 +634,7 @@ const server = http.createServer(async (req, res) => {
       const raw = await readBody(req);
       const params = new URLSearchParams(raw.toString("utf8"));
       const eventId = params.get("event_id") ? Number(params.get("event_id")) : null;
-      confirmMatch(Number(confirmMatchM[1]), eventId);
+      await confirmMatch(Number(confirmMatchM[1]), eventId);
       return sendRedirect(res, "/matchmaking");
     }
 
@@ -660,7 +650,7 @@ const server = http.createServer(async (req, res) => {
       const method = ["Decision", "TKO/KO"].includes(methodRaw) ? methodRaw : "Decision";
       const fotnRaw = params.get("fotn_fighter_id") || "";
       const fotnFighterId = fotnRaw === "" ? null : Number(fotnRaw);
-      recordMatchResult({ matchId: Number(resultMatchM[1]), winnerFighterId, method, fotnFighterId });
+      await recordMatchResult({ matchId: Number(resultMatchM[1]), winnerFighterId, method, fotnFighterId });
       return sendRedirect(res, "/confirmed");
     }
 
@@ -670,14 +660,14 @@ const server = http.createServer(async (req, res) => {
       const raw = await readBody(req);
       const params = new URLSearchParams(raw.toString("utf8"));
       const eventId = params.get("event_id") ? Number(params.get("event_id")) : null;
-      placeMatchOnEvent(Number(placeMatchM[1]), eventId);
+      await placeMatchOnEvent(Number(placeMatchM[1]), eventId);
       return sendRedirect(res, "/matchmaking");
     }
 
     const cancelMatchM = pathname.match(/^\/matches\/(\d+)\/cancel$/);
     if (req.method === "POST" && cancelMatchM) {
       if (!user || !admin) return sendRedirect(res, "/");
-      cancelMatch(Number(cancelMatchM[1]));
+      await cancelMatch(Number(cancelMatchM[1]));
       return sendRedirect(res, "/matchmaking");
     }
 
@@ -690,6 +680,13 @@ const server = http.createServer(async (req, res) => {
   }
 });
 
-server.listen(PORT, () => {
-  console.log(`Prizefighter Promotions running at http://localhost:${PORT}`);
-});
+initDb()
+  .then(() => {
+    server.listen(PORT, () => {
+      console.log(`Prizefighter Promotions running at http://localhost:${PORT}`);
+    });
+  })
+  .catch((err) => {
+    console.error("Failed to initialise database:", err);
+    process.exit(1);
+  });
