@@ -116,6 +116,17 @@ body{padding-bottom:78px}
 .bt-item.active{color:var(--gold-bright)}
 .bt-item svg{width:21px;height:21px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .bt-item span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.home-tiles{display:flex;flex-direction:column;gap:16px;margin:0 0 32px}
+.home-tile{display:flex;align-items:center;gap:18px;background:var(--panel);border:1px solid #2a2a2a;border-left:6px solid var(--gold);border-radius:10px;padding:24px 20px;color:inherit;min-height:64px}
+.home-tile:hover{text-decoration:none;border-color:var(--gold-bright);border-left-color:var(--gold-bright)}
+.home-tile .ht-icon{flex:0 0 auto;width:40px;height:40px;color:var(--gold-bright)}
+.home-tile .ht-icon svg{width:100%;height:100%;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.home-tile .ht-body{flex:1 1 auto;min-width:0}
+.home-tile .ht-eyebrow{display:block;font-size:0.7rem;text-transform:uppercase;letter-spacing:.08em;color:var(--gold-bright);font-weight:700;margin:0 0 4px}
+.home-tile .ht-title{display:block;font-family:'Oswald',sans-serif;font-size:1.5rem;font-weight:700;margin:0 0 4px;color:var(--cream)}
+.home-tile .ht-sub{display:block;color:var(--grey);font-size:0.85rem;margin:0}
+.home-tile .ht-chev{flex:0 0 auto;color:var(--grey);font-size:1.8rem;line-height:1}
+@media (min-width:520px){.home-tile{padding:30px 26px;min-height:80px}.home-tile .ht-title{font-size:1.7rem}}
 </style>
 </head>
 <body>
@@ -568,6 +579,29 @@ function pfRenderNav() {
   pfRenderProfileCorner();
 }
 
+// The 4 big tap targets shown at the top of the logged-in home screen —
+// same sections as the bottom tab bar (minus Home itself), just presented
+// as large stacked tiles so they're the first thing a member sees.
+const PF_HOME_TILES = [
+  { href: "#/fighters", icon: "fighters", eyebrow: "The Roster", title: "Fighters", sub: "Every registered fighter, gym & record." },
+  { href: "#/events", icon: "events", eyebrow: "Fight Nights", title: "Events", sub: "Upcoming fight nights — view and nominate." },
+  { href: "#/offers", icon: "offers", eyebrow: "Offers & Noms", title: "Nominations", sub: "Your pending fight offers and the matching pool." },
+  { href: "#/confirmed", icon: "matches", eyebrow: "Fight Card", title: "Matches", sub: "Confirmed bouts and results." },
+];
+
+function pfHomeTiles() {
+  return `<div class="home-tiles">${PF_HOME_TILES.map((t) => `
+    <a href="${t.href}" data-link class="home-tile">
+      <span class="ht-icon">${PF_ICONS[t.icon]}</span>
+      <span class="ht-body">
+        <span class="ht-eyebrow">${t.eyebrow}</span>
+        <span class="ht-title">${t.title}</span>
+        <span class="ht-sub">${t.sub}</span>
+      </span>
+      <span class="ht-chev">&rsaquo;</span>
+    </a>`).join("")}</div>`;
+}
+
 function pfSetBody(html) {
   pfApp.innerHTML = html;
   window.scrollTo(0, 0);
@@ -609,6 +643,7 @@ async function pfViewHome() {
 
   pfSetBody(`
     <section class="section">
+      ${pfHomeTiles()}
       <h1>Welcome back, ${pfEscape(pfState.fighter.full_name)}</h1>
       <p class="sub">${pfEscape(pfState.fighter.gym_name)} &middot; ${pfEscape(pfState.fighter.boxer_type)}</p>
       <div class="stat-row">
