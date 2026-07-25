@@ -127,6 +127,26 @@ body{padding-bottom:78px}
 .home-tile .ht-sub{display:block;color:var(--grey);font-size:0.85rem;margin:0}
 .home-tile .ht-chev{flex:0 0 auto;color:var(--grey);font-size:1.8rem;line-height:1}
 @media (min-width:520px){.home-tile{padding:30px 26px;min-height:80px}.home-tile .ht-title{font-size:1.7rem}}
+.roster-list{display:flex;flex-direction:column;gap:22px}
+.roster-card,.profile-frame{border:2px solid var(--gold-dark);border-radius:16px;background:radial-gradient(ellipse at top, #1c1c1c 0%, #0d0d0d 72%);box-shadow:inset 0 0 0 1px rgba(201,162,39,.15), 0 6px 18px rgba(0,0,0,.45)}
+.roster-card{display:block;color:inherit;padding:22px 20px}
+.roster-card:hover{text-decoration:none;border-color:var(--gold)}
+.roster-card-top{display:flex;gap:16px;align-items:center;margin-bottom:16px}
+.roster-photo{width:84px;height:84px;border-radius:50%;object-fit:cover;border:3px solid var(--gold);flex:0 0 auto;background:#111}
+.challenger-badge{display:inline-block;font-size:0.66rem;text-transform:uppercase;letter-spacing:.05em;color:#0a0a0a;background:var(--gold);border-radius:100px;padding:3px 10px;font-weight:800;margin-bottom:6px}
+.roster-name{font-family:'Oswald',sans-serif;font-size:1.3rem;font-weight:700;margin:0 0 2px;color:var(--cream)}
+.roster-division{color:var(--grey);font-size:0.85rem;margin:0}
+.roster-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:14px 0}
+.roster-stat{text-align:center;border:1px solid #2a2a2a;border-radius:8px;padding:8px 4px;background:rgba(255,255,255,0.02)}
+.roster-stat .n{display:block;font-family:'Oswald',sans-serif;font-size:1.3rem;color:var(--gold-bright)}
+.roster-stat .l{display:block;font-size:0.6rem;text-transform:uppercase;letter-spacing:.05em;color:var(--grey)}
+.roster-gym{border-top:1px solid #2a2a2a;padding-top:12px;margin-top:4px;font-size:0.85rem;color:var(--grey)}
+.roster-gym strong{color:var(--cream)}
+.profile-frame{padding:26px 22px;margin-bottom:24px}
+.profile-grid{display:grid;grid-template-columns:180px 1fr;gap:20px;align-items:start}
+.profile-grid .roster-photo{width:100%;height:auto;aspect-ratio:1}
+.profile-grid .roster-stats{grid-template-columns:repeat(auto-fit,minmax(72px,1fr))}
+@media (max-width:560px){.profile-grid{grid-template-columns:1fr}.profile-grid .roster-photo{width:120px;height:120px;margin:0 auto}.profile-grid .challenger-badge{display:block;width:fit-content;margin-left:auto;margin-right:auto}}
 </style>
 </head>
 <body>
@@ -697,7 +717,8 @@ async function pfViewRegister(prefill = {}, error = "") {
 
   pfSetBody(`
     <section class="section">
-      <h1>${isEdit ? "Edit Your Profile" : "Fighter Registration"}</h1>
+      <h1>${isEdit ? "Edit Your Profile" : "Build Your Fight Club Profile"}</h1>
+      ${isEdit ? "" : `<p class="sub">Before you can see the roster, events, or nominate for a fight night, tell us who you are.</p>`}
       ${pfFlash(error)}
       <form class="pf-form" data-form="register" data-fighter-id="${isEdit ? existing.id : ""}">
         <div class="field"><label>Full name</label><input type="text" name="full_name" value="${pfEscape(fighter.full_name || "")}" required></div>
@@ -706,7 +727,7 @@ async function pfViewRegister(prefill = {}, error = "") {
         <div class="field"><label>Gym town</label><input type="text" name="gym_town" value="${pfEscape(fighter.gym_town || "")}" required></div>
         <div class="field"><label>Gym postcode</label><input type="text" name="gym_postcode" value="${pfEscape(fighter.gym_postcode || "")}" pattern="\\d{4}" required></div>
         <div class="field">
-          <label>Boxer type</label>
+          <label>Are you a Fight Club Challenger &mdash; Amateur or Pro?</label>
           <div class="radio-row">
             <label><input type="radio" name="boxer_type" value="amateur" ${boxerType === "amateur" ? "checked" : ""}> Amateur</label>
             <label><input type="radio" name="boxer_type" value="professional" ${boxerType === "professional" ? "checked" : ""}> Professional</label>
@@ -716,6 +737,7 @@ async function pfViewRegister(prefill = {}, error = "") {
         <div class="field"><label>Wins</label><input type="number" name="wins" min="0" value="${fighter.wins ?? 0}"></div>
         <div class="field"><label>Losses</label><input type="number" name="losses" min="0" value="${fighter.losses ?? 0}"></div>
         <div class="field"><label>Draws</label><input type="number" name="draws" min="0" value="${fighter.draws ?? 0}"></div>
+        <div class="field"><label>Exhibition bouts</label><input type="number" name="exhibition_bouts" min="0" value="${fighter.exhibition_bouts ?? 0}"></div>
         <div class="field"><label>KO/TKO wins</label><input type="number" name="ko_tko_wins" min="0" value="${fighter.ko_tko_wins ?? 0}"></div>
         <div class="field">
           <label>Do you hold a title?</label>
@@ -788,22 +810,28 @@ async function pfViewFighterProfile(id) {
     return `<tr><td>${pfEscape(opponent)}</td><td>${pfEscape(b.status)}</td><td>${pfEscape(b.event_title || "TBC")}</td></tr>`;
   }).join("")}</tbody></table>` : `<p class="fighter-meta">No bouts yet.</p>`;
 
+  const challenger = fighter.boxer_type === "professional" ? "Pro" : "Amateur";
   pfSetBody(`
     <section class="section">
-      <a href="#/fighters" data-link class="back-link">&larr; Fighter Profiles</a>
-      <div class="grid" style="grid-template-columns:220px 1fr;align-items:start">
-        <img src="${fighter.photo_path ? pfEscape(fighter.photo_path) : '/fighter-placeholder.svg'}" style="width:100%;border-radius:10px;object-fit:cover;aspect-ratio:1">
-        <div>
-          <h1>${pfEscape(fighter.full_name)}${fighter.has_title ? ` <span class="badge">${pfEscape(fighter.title_level)} title</span>` : ""}</h1>
-          <p class="sub">${pfEscape(fighter.gym_name)}, ${pfEscape(fighter.gym_town)} &middot; Coach ${pfEscape(fighter.coach_name)}</p>
-          <div class="stat-row">
-            <div class="stat-box"><span class="num">${fighter.wins || 0}</span><span class="lbl">Wins</span></div>
-            <div class="stat-box"><span class="num">${fighter.losses || 0}</span><span class="lbl">Losses</span></div>
-            <div class="stat-box"><span class="num">${fighter.draws || 0}</span><span class="lbl">Draws</span></div>
-            <div class="stat-box"><span class="num">${points}</span><span class="lbl">Points</span></div>
+      <a href="#/fighters" data-link class="back-link">&larr; Fighters</a>
+      <div class="profile-frame">
+        <div class="profile-grid">
+          <img class="roster-photo" src="${fighter.photo_path ? pfEscape(fighter.photo_path) : '/fighter-placeholder.svg'}">
+          <div>
+            <span class="challenger-badge">Fight Club Challenger &mdash; ${challenger}</span>
+            <h1 style="margin-top:0">${pfEscape(fighter.full_name)}${fighter.has_title ? ` <span class="badge">${pfEscape(fighter.title_level)} title</span>` : ""}</h1>
+            <p class="sub" style="margin-bottom:12px">${pfEscape(fighter.division_label || "")}</p>
+            <div class="roster-stats">
+              <div class="roster-stat"><span class="n">${fighter.wins || 0}</span><span class="l">Wins</span></div>
+              <div class="roster-stat"><span class="n">${fighter.losses || 0}</span><span class="l">Losses</span></div>
+              <div class="roster-stat"><span class="n">${fighter.exhibition_bouts || 0}</span><span class="l">Exhibitions</span></div>
+              <div class="roster-stat"><span class="n">${fighter.ko_tko_wins || 0}</span><span class="l">KO/TKO</span></div>
+              <div class="roster-stat"><span class="n">${points}</span><span class="l">Points</span></div>
+            </div>
+            <div class="roster-gym"><strong>Gym:</strong> ${pfEscape(fighter.gym_name)}, ${pfEscape(fighter.gym_town)} &middot; Coach ${pfEscape(fighter.coach_name)}</div>
+            <p style="margin-top:14px">${bio}</p>
+            ${isOwner ? `<a href="#/register" data-link class="btn btn-outline btn-small">Edit profile</a>` : ""}
           </div>
-          <p>${bio}</p>
-          ${isOwner ? `<a href="#/register" data-link class="btn btn-outline btn-small">Edit profile</a>` : ""}
         </div>
       </div>
       <h2>Bouts</h2>
@@ -815,20 +843,32 @@ async function pfViewFighterProfiles() {
   if (!pfRequireLogin()) return;
   pfSetBody(`<div class="spinner-msg">Loading roster…</div>`);
   const fighters = await pfDb.allFighters();
-  const cards = fighters.map((f) => `
-    <a href="#/fighters/${f.id}" data-link class="fighter-card">
-      <img src="${f.photo_path ? pfEscape(f.photo_path) : '/fighter-placeholder.svg'}" alt="${pfEscape(f.full_name)}">
-      <div class="fc-body">
-        <p class="fc-name">${pfEscape(f.full_name)}</p>
-        <p class="fighter-meta">${pfEscape(f.gym_name)} &middot; ${pfEscape(f.division_label || f.boxer_type)}</p>
-        <p class="fighter-meta">${f.wins || 0}-${f.losses || 0}-${f.draws || 0}</p>
+  const cards = fighters.map((f) => {
+    const challenger = f.boxer_type === "professional" ? "Pro" : "Amateur";
+    return `
+    <a href="#/fighters/${f.id}" data-link class="roster-card">
+      <div class="roster-card-top">
+        <img class="roster-photo" src="${f.photo_path ? pfEscape(f.photo_path) : '/fighter-placeholder.svg'}" alt="${pfEscape(f.full_name)}">
+        <div>
+          <span class="challenger-badge">Fight Club Challenger &mdash; ${challenger}</span>
+          <p class="roster-name">${pfEscape(f.full_name)}</p>
+          <p class="roster-division">${pfEscape(f.division_label || "")}</p>
+        </div>
       </div>
-    </a>`).join("");
+      <div class="roster-stats">
+        <div class="roster-stat"><span class="n">${f.wins || 0}</span><span class="l">Wins</span></div>
+        <div class="roster-stat"><span class="n">${f.losses || 0}</span><span class="l">Losses</span></div>
+        <div class="roster-stat"><span class="n">${f.exhibition_bouts || 0}</span><span class="l">Exhibitions</span></div>
+        <div class="roster-stat"><span class="n">${f.ko_tko_wins || 0}</span><span class="l">KO/TKO</span></div>
+      </div>
+      <div class="roster-gym"><strong>Gym:</strong> ${pfEscape(f.gym_name)}</div>
+    </a>`;
+  }).join("");
   pfSetBody(`
     <section class="section">
-      <h1>Fighter Profiles</h1>
+      <h1>Fighters</h1>
       <p class="sub">${fighters.length} registered fighters</p>
-      <div class="grid grid-3">${cards || '<p class="empty-state">No fighters registered yet.</p>'}</div>
+      <div class="roster-list">${cards || '<p class="empty-state">No fighters registered yet.</p>'}</div>
     </section>`);
 }
 
@@ -1064,8 +1104,17 @@ const PF_ROUTES = [
   [/^\/matchmaking$/, () => pfViewMatchmaking()],
 ];
 
+// Any signed-in user without a fighter profile yet gets bounced to
+// registration no matter what link/tab they try to open — first login must
+// end in a completed Fight Club profile before anything else is browsable.
+const PF_PROFILE_GATE_EXEMPT = new Set(["/register", "/signup", "/login"]);
+
 function pfRoute() {
   const path = location.hash.replace(/^#/, "") || "/";
+  if (pfState.user && !pfState.fighter && !PF_PROFILE_GATE_EXEMPT.has(path)) {
+    location.hash = "#/register";
+    return;
+  }
   for (const [pattern, handler] of PF_ROUTES) {
     const m = path.match(pattern);
     if (m) { handler(m); pfRenderNav(); return; }
@@ -1121,7 +1170,7 @@ document.addEventListener("submit", async (e) => {
         wins: Number(fd.get("wins")) || 0,
         losses: Number(fd.get("losses")) || 0,
         draws: Number(fd.get("draws")) || 0,
-        exhibition_bouts: 0,
+        exhibition_bouts: Number(fd.get("exhibition_bouts")) || 0,
         ko_tko_wins: Number(fd.get("ko_tko_wins")) || 0,
         has_title: fd.get("has_title") === "yes",
         title_level: fd.get("has_title") === "yes" ? fd.get("title_level") : null,
