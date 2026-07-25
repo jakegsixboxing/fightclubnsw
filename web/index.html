@@ -99,6 +99,23 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--gold)}
 .pill.active{border-color:var(--gold);color:var(--gold-bright)}
 .spinner-msg{text-align:center;padding:40px;color:var(--grey)}
 @media (max-width:600px){.header-inner{flex-direction:column;align-items:flex-start}}
+body{padding-bottom:78px}
+.site-footer{margin-bottom:12px}
+.profile-corner{position:relative;display:flex;align-items:center;gap:14px}
+.profile-avatar-btn{background:none;border:none;color:inherit;font:inherit;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px}
+.profile-avatar{width:38px;height:38px;border-radius:50%;background:linear-gradient(180deg,var(--gold-bright),var(--gold-dark));color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:0.85rem;font-family:'Oswald',sans-serif}
+.profile-avatar-lbl{font-size:0.62rem;text-transform:uppercase;letter-spacing:.06em;color:var(--grey)}
+.profile-menu{position:absolute;top:100%;right:0;margin-top:10px;background:var(--panel);border:1px solid #2a2a2a;border-radius:10px;min-width:190px;padding:6px;box-shadow:0 10px 30px rgba(0,0,0,.4);z-index:60;display:none}
+.profile-menu.open{display:block}
+.profile-menu a,.profile-menu button{display:block;width:100%;text-align:left;background:none;border:none;color:var(--cream);font:inherit;padding:9px 12px;border-radius:6px;cursor:pointer}
+.profile-menu a:hover,.profile-menu button:hover{background:#222;text-decoration:none;color:var(--gold-bright)}
+.profile-menu .menu-divider{border-top:1px solid #2a2a2a;margin:4px 0}
+.bottom-tabs{position:fixed;left:0;right:0;bottom:0;display:flex;justify-content:space-around;align-items:stretch;background:rgba(10,10,10,.94);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-top:1px solid #2a2a2a;padding:8px 2px calc(6px + env(safe-area-inset-bottom));z-index:50}
+.bt-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:var(--grey);font-size:0.6rem;font-weight:700;letter-spacing:.03em;text-transform:uppercase;text-decoration:none;padding:4px 2px;min-width:0}
+.bt-item:hover{text-decoration:none;color:var(--gold-bright)}
+.bt-item.active{color:var(--gold-bright)}
+.bt-item svg{width:21px;height:21px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.bt-item span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
 </style>
 </head>
 <body>
@@ -108,7 +125,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--gold)}
       <img src="/logo.png" alt="Prize Fighter NSW" class="brand-logo">
       <span class="brand-text">PRIZE FIGHTER <span class="brand-nsw">NSW</span></span>
     </a>
-    <nav class="main-nav" id="pf-nav"></nav>
+    <div class="profile-corner" id="pf-profile-corner"></div>
   </div>
 </header>
 <main class="wrap" id="app"><div class="spinner-msg">Loading…</div></main>
@@ -118,6 +135,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--gold)}
     <p>Prize Fighter NSW &mdash; honest NSW boxing. Real records, fair fights.</p>
   </div>
 </footer>
+<nav class="bottom-tabs" id="pf-bottom-tabs"></nav>
 
 <script type="module">
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
@@ -149,7 +167,8 @@ const pfState = {
 };
 
 const pfApp = document.getElementById("app");
-const pfNavEl = document.getElementById("pf-nav");
+const pfProfileCornerEl = document.getElementById("pf-profile-corner");
+const pfBottomTabsEl = document.getElementById("pf-bottom-tabs");
 
 function pfEscape(str) {
   return String(str ?? "")
@@ -482,26 +501,71 @@ function pfBuildBio(fighter, division) {
 // ---------------------------------------------------------------------------
 // Layout
 // ---------------------------------------------------------------------------
-function pfRenderNav() {
-  const u = pfState.user;
-  const items = u ? [
-    ["#/fighters", "Fighter Profiles", "roster"],
-    ["#/events", "Events", "events"],
-    ["#/matching-pool", "Matching Pool", "matching-pool"],
-    ["#/confirmed", "Confirmed", "confirmed"],
-    ["#/points", "Points", "points"],
-  ] : [];
+// Icons are simple 24x24 line icons (stroke=currentColor), matching the flat
+// two-tone look of the reference bottom-nav (icon over a short caps label).
+const PF_ICONS = {
+  home: `<svg viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V9.5"/></svg>`,
+  fighters: `<svg viewBox="0 0 24 24"><circle cx="9" cy="7" r="3.2"/><path d="M2.5 20v-1.2A4.8 4.8 0 0 1 7.3 14h3.4a4.8 4.8 0 0 1 4.8 4.8V20"/><path d="M15.5 4.2a3.2 3.2 0 0 1 0 6"/><path d="M16.2 14a4.8 4.8 0 0 1 5.3 4.8V20"/></svg>`,
+  events: `<svg viewBox="0 0 24 24"><rect x="3" y="4.5" width="18" height="16" rx="2"/><path d="M8 2.5v4M16 2.5v4M3 9.5h18"/></svg>`,
+  offers: `<svg viewBox="0 0 24 24"><path d="M18 8.5a6 6 0 0 0-12 0c0 6.5-2.5 8.5-2.5 8.5h17s-2.5-2-2.5-8.5"/><path d="M13.7 20.5a2 2 0 0 1-3.4 0"/></svg>`,
+  matches: `<svg viewBox="0 0 24 24"><path d="M21 10.8V11.5a9.5 9.5 0 1 1-5.6-8.7"/><path d="M21 4.5 11.5 14l-3-3"/></svg>`,
+};
+
+// The bottom tab bar is always the same 5 sections (mirrors the reference
+// photo's layout: icon above a short caps label, gold when active). Sections
+// that require an account still show — tapping one while logged out just
+// bounces to Log In, same as the old top nav links did.
+const PF_TABS = [
+  { href: "#/", label: "Home", icon: "home", match: (p) => p === "/" },
+  { href: "#/fighters", label: "Fighters", icon: "fighters", match: (p) => p.startsWith("/fighters") },
+  { href: "#/events", label: "Events", icon: "events", match: (p) => p.startsWith("/events") },
+  { href: "#/offers", label: "Offers", icon: "offers", match: (p) => p.startsWith("/offers") || p.startsWith("/matching-pool") },
+  { href: "#/confirmed", label: "Matches", icon: "matches", match: (p) => p.startsWith("/confirmed") },
+];
+
+function pfInitials(nameOrEmail) {
+  const src = (nameOrEmail || "").trim();
+  if (!src) return "?";
+  const parts = src.split(/\s+/).filter(Boolean);
+  if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
+  return src.slice(0, 2).toUpperCase();
+}
+
+function pfRenderBottomTabs() {
   const active = location.hash.replace(/^#/, "") || "/";
-  const isActive = (href) => (href === "#/" ? active === "/" : active.startsWith(href.slice(1)));
-  let html = items.map(([href, label]) => `<a href="${href}" data-link class="${isActive(href) ? "active" : ""}">${label}</a>`).join("");
-  if (u) {
-    html += `<a href="#/me" data-link class="${active === "/me" ? "active" : ""}">My Profile</a>`;
-    html += `<button class="link-btn" data-action="logout">Log Out</button>`;
-  } else {
-    html += `<a href="#/login" data-link class="${active === "/login" ? "active" : ""}">Log In</a>`;
-    html += `<a href="#/signup" data-link class="btn btn-gold btn-small">Register</a>`;
+  pfBottomTabsEl.innerHTML = PF_TABS.map((t) => `
+    <a href="${t.href}" data-link class="bt-item ${t.match(active) ? "active" : ""}">
+      ${PF_ICONS[t.icon]}<span>${t.label}</span>
+    </a>`).join("");
+}
+
+function pfRenderProfileCorner() {
+  const u = pfState.user;
+  const active = location.hash.replace(/^#/, "") || "/";
+  if (!u) {
+    pfProfileCornerEl.innerHTML = `
+      <a href="#/login" data-link class="${active === "/login" ? "active" : ""}">Log In</a>
+      <a href="#/signup" data-link class="btn btn-gold btn-small">Register</a>`;
+    return;
   }
-  pfNavEl.innerHTML = html;
+  const label = pfInitials(pfState.fighter ? pfState.fighter.full_name : u.email);
+  pfProfileCornerEl.innerHTML = `
+    <button class="profile-avatar-btn" data-action="toggle-profile-menu" type="button">
+      <span class="profile-avatar">${label}</span>
+      <span class="profile-avatar-lbl">Profile</span>
+    </button>
+    <div class="profile-menu" id="pf-profile-menu">
+      <a href="#/me" data-link>My Profile</a>
+      <a href="#/points" data-link>Points &amp; Leaderboard</a>
+      ${pfState.isAdmin ? `<div class="menu-divider"></div><a href="#/matchmaking" data-link>Matchmaking</a><a href="#/events/new" data-link>Create Fight Night</a>` : ""}
+      <div class="menu-divider"></div>
+      <button data-action="logout" type="button">Log Out</button>
+    </div>`;
+}
+
+function pfRenderNav() {
+  pfRenderBottomTabs();
+  pfRenderProfileCorner();
 }
 
 function pfSetBody(html) {
@@ -536,18 +600,6 @@ async function pfViewHome() {
     pfDb.countFighters(), pfDb.countEvents(),
     pfDb.pendingOffersForFighter(pfState.fighter.id), pfDb.boutsForFighter(pfState.fighter.id),
   ]);
-  const offersHtml = offers.length ? offers.map((o) => {
-    const isA = o.fighter_a_id === pfState.fighter.id;
-    const opponent = isA ? o.b_name : o.a_name;
-    return `<div class="offer-card">
-      <p><strong>Fight offer</strong> vs ${pfEscape(opponent)}${o.agreed_weight ? ` &middot; ${pfEscape(o.agreed_weight)}` : ""}</p>
-      ${o.note ? `<p class="fighter-meta">${pfEscape(o.note)}</p>` : ""}
-      <div class="stat-row" style="margin:8px 0 0">
-        <button class="btn btn-gold btn-small" data-action="respond-match" data-match-id="${o.id}" data-response="accepted">Accept</button>
-        <button class="btn btn-outline btn-small" data-action="respond-match" data-match-id="${o.id}" data-response="declined">Decline</button>
-      </div>
-    </div>`;
-  }).join("") : `<p class="fighter-meta">No pending fight offers right now.</p>`;
 
   const boutsHtml = bouts.length ? bouts.map((b) => {
     const isA = b.fighter_a_id === pfState.fighter.id;
@@ -563,8 +615,7 @@ async function pfViewHome() {
         <div class="stat-box"><span class="num">${fighterCount}</span><span class="lbl">Fighters</span></div>
         <div class="stat-box"><span class="num">${eventCount}</span><span class="lbl">Fight Nights</span></div>
       </div>
-      <h2>Your pending offers</h2>
-      ${offersHtml}
+      ${offers.length ? `<div class="flash flash-success"><strong>${offers.length}</strong> pending fight offer${offers.length === 1 ? "" : "s"} waiting on you &mdash; <a href="#/offers" data-link>respond on the Offers tab</a>.</div>` : ""}
       <h2>Your bouts</h2>
       ${boutsHtml}
       ${pfState.isAdmin ? `<h2>Admin</h2><div class="stat-row"><a href="#/matchmaking" data-link class="btn btn-outline btn-small">Matchmaking</a><a href="#/events/new" data-link class="btn btn-outline btn-small">Create fight night</a></div>` : ""}
@@ -818,11 +869,31 @@ async function pfViewEventDetail(id) {
     </section>`);
 }
 
-async function pfViewMatchingPool() {
+// Combines what used to be two separate pages: the fighter's own pending
+// fight offers (accept/decline) and the wider matching pool table of every
+// fighter nominated to a fight night. One tab in the bottom nav ("Offers").
+async function pfViewOffers() {
   if (!pfRequireLogin()) return;
   pfSetBody(`<div class="spinner-msg">Loading…</div>`);
-  const fighters = await pfDb.matchingPoolFighters();
-  const rows = fighters.map((f) => `
+  const [myOffers, fighters] = await Promise.all([
+    pfState.fighter ? pfDb.pendingOffersForFighter(pfState.fighter.id) : Promise.resolve([]),
+    pfDb.matchingPoolFighters(),
+  ]);
+
+  const offersHtml = myOffers.length ? myOffers.map((o) => {
+    const isA = o.fighter_a_id === pfState.fighter.id;
+    const opponent = isA ? o.b_name : o.a_name;
+    return `<div class="offer-card">
+      <p><strong>Fight offer</strong> vs ${pfEscape(opponent)}${o.agreed_weight ? ` &middot; ${pfEscape(o.agreed_weight)}` : ""}</p>
+      ${o.note ? `<p class="fighter-meta">${pfEscape(o.note)}</p>` : ""}
+      <div class="stat-row" style="margin:8px 0 0">
+        <button class="btn btn-gold btn-small" data-action="respond-match" data-match-id="${o.id}" data-response="accepted">Accept</button>
+        <button class="btn btn-outline btn-small" data-action="respond-match" data-match-id="${o.id}" data-response="declined">Decline</button>
+      </div>
+    </div>`;
+  }).join("") : `<p class="fighter-meta">No pending fight offers right now.</p>`;
+
+  const poolRows = fighters.map((f) => `
     <tr>
       <td><a href="#/fighters/${f.id}" data-link>${pfEscape(f.full_name)}</a></td>
       <td>${pfEscape(f.gym_name)}</td>
@@ -830,12 +901,15 @@ async function pfViewMatchingPool() {
       <td>${f.wins || 0}-${f.losses || 0}-${f.draws || 0}</td>
       <td>${(f.nominated_events || []).map(pfEscape).join(", ")}</td>
     </tr>`).join("");
+
   pfSetBody(`
     <section class="section">
-      <h1>Matching Pool</h1>
+      <h1>Noms &amp; Fight Offers</h1>
+      ${pfState.fighter ? `<h2>Your pending offers</h2>${offersHtml}` : ""}
+      <h2>Matching pool</h2>
       <p class="sub">Every fighter currently nominated to at least one fight night.</p>
       <table class="data-table"><thead><tr><th>Fighter</th><th>Gym</th><th>Division</th><th>Record</th><th>Nominated for</th></tr></thead>
-      <tbody>${rows || '<tr><td colspan="5" class="fighter-meta">No one in the pool right now.</td></tr>'}</tbody></table>
+      <tbody>${poolRows || '<tr><td colspan="5" class="fighter-meta">No one in the pool right now.</td></tr>'}</tbody></table>
     </section>`);
 }
 
@@ -847,7 +921,7 @@ async function pfViewConfirmed() {
     <tr><td>${pfEscape(m.event_title || "TBC")}</td><td>${pfEscape(m.event_date || "")}</td><td>${pfEscape(m.a_name)}</td><td>${pfEscape(m.b_name)}</td><td>${pfEscape(m.agreed_weight || "")}</td></tr>`).join("");
   pfSetBody(`
     <section class="section">
-      <h1>Confirmed Matches</h1>
+      <h1>Matched Fights</h1>
       <table class="data-table"><thead><tr><th>Event</th><th>Date</th><th>Fighter A</th><th>Fighter B</th><th>Weight</th></tr></thead>
       <tbody>${rows || '<tr><td colspan="5" class="fighter-meta">No confirmed matches yet.</td></tr>'}</tbody></table>
       ${pfState.isAdmin ? pfAdminResultForms(matches) : ""}
@@ -948,7 +1022,8 @@ const PF_ROUTES = [
   [/^\/events$/, () => pfViewEventsList()],
   [/^\/events\/new$/, () => pfViewEventForm()],
   [/^\/events\/(\d+)$/, (m) => pfViewEventDetail(Number(m[1]))],
-  [/^\/matching-pool$/, () => pfViewMatchingPool()],
+  [/^\/offers$/, () => pfViewOffers()],
+  [/^\/matching-pool$/, () => pfViewOffers()], // legacy alias
   [/^\/confirmed$/, () => pfViewConfirmed()],
   [/^\/points$/, () => pfViewPoints()],
   [/^\/matchmaking$/, () => pfViewMatchmaking()],
@@ -1054,7 +1129,7 @@ document.addEventListener("submit", async (e) => {
     } else if (kind === "nominate") {
       if (!pfState.fighter) throw new Error("Register a fighter profile first.");
       await pfDb.nominate(Number(form.getAttribute("data-event-id")), pfState.fighter.id);
-      location.hash = "#/matching-pool";
+      location.hash = "#/offers";
     } else if (kind === "withdraw") {
       if (pfState.fighter) await pfDb.withdrawNomination(Number(form.getAttribute("data-event-id")), pfState.fighter.id);
       pfRoute();
@@ -1098,11 +1173,25 @@ document.addEventListener("click", async (e) => {
   const link = e.target.closest("[data-link]");
   if (link) {
     // Native hash navigation via href="#/..." already works; nothing extra needed.
+    const openMenu = document.getElementById("pf-profile-menu");
+    if (openMenu) openMenu.classList.remove("open");
     return;
   }
   const actionBtn = e.target.closest("[data-action]");
-  if (!actionBtn) return;
+  if (!actionBtn) {
+    // Clicked outside the profile menu/button entirely: close it if open.
+    if (!e.target.closest(".profile-corner")) {
+      const openMenu = document.getElementById("pf-profile-menu");
+      if (openMenu) openMenu.classList.remove("open");
+    }
+    return;
+  }
   const action = actionBtn.getAttribute("data-action");
+  if (action === "toggle-profile-menu") {
+    const menu = document.getElementById("pf-profile-menu");
+    if (menu) menu.classList.toggle("open");
+    return;
+  }
   if (action === "logout") {
     await pfSupabase.auth.signOut();
     location.hash = "#/";
