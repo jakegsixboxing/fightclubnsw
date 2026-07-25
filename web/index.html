@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Prize Fighter NSW</title>
+<title>Fight Club Central Coast</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800;900&family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -13,12 +13,12 @@
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Prize Fighter">
+<meta name="apple-mobile-web-app-title" content="Fight Club">
 <meta name="theme-color" content="#0a0a0a">
 <style>
 :root{
   --black:#0a0a0a; --black2:#141414; --panel:#181818;
-  --gold:#cc2130; --gold-bright:#ff4552; --gold-mid:#d12435; --gold-dark:#7d1119;
+  --gold:#c9a227; --gold-bright:#e8c65f; --gold-mid:#b8912c; --gold-dark:#6b5215;
   --grey:#a9a49a; --cream:#f2ede2;
 }
 *{box-sizing:border-box}
@@ -31,7 +31,7 @@ a:hover{text-decoration:underline}
 .header-inner{display:flex;align-items:center;justify-content:space-between;padding:14px 0;flex-wrap:wrap;gap:10px}
 .brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:1.1rem;color:var(--cream)}
 .brand-logo{height:40px}
-.brand-nsw{color:var(--gold)}
+.brand-accent{color:var(--gold)}
 .main-nav{display:flex;gap:16px;align-items:center;flex-wrap:wrap;font-size:0.9rem}
 .main-nav a{color:var(--grey)}
 .main-nav a.active,.main-nav a:hover{color:var(--gold-bright);text-decoration:none}
@@ -122,8 +122,8 @@ body{padding-bottom:78px}
 <header class="site-header">
   <div class="wrap header-inner">
     <a class="brand" href="#/" data-link>
-      <img src="/logo.png" alt="Prize Fighter NSW" class="brand-logo">
-      <span class="brand-text">PRIZE FIGHTER <span class="brand-nsw">NSW</span></span>
+      <img src="/logo.png" alt="Fight Club Central Coast" class="brand-logo">
+      <span class="brand-text">FIGHT <span class="brand-accent">CLUB</span></span>
     </a>
     <div class="profile-corner" id="pf-profile-corner"></div>
   </div>
@@ -131,8 +131,8 @@ body{padding-bottom:78px}
 <main class="wrap" id="app"><div class="spinner-msg">Loading…</div></main>
 <footer class="site-footer">
   <div class="wrap">
-    <img src="/logo.png" alt="Prize Fighter NSW" class="footer-logo">
-    <p>Prize Fighter NSW &mdash; honest NSW boxing. Real records, fair fights.</p>
+    <img src="/logo.png" alt="Fight Club Central Coast" class="footer-logo">
+    <p>Fight Club Central Coast &mdash; honest Central Coast boxing. Real records, fair fights.</p>
   </div>
 </footer>
 <nav class="bottom-tabs" id="pf-bottom-tabs"></nav>
@@ -141,7 +141,7 @@ body{padding-bottom:78px}
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 // ============================================================================
-// Prize Fighter NSW — single-file client app.
+// Fight Club Central Coast — single-file client app.
 // No build step, no framework. Supabase (Auth + Postgres w/ RLS + Storage)
 // is the entire backend; this file only talks to Supabase directly.
 // Naming convention: everything belonging to this app is prefixed `pf`.
@@ -585,8 +585,8 @@ async function pfViewHome() {
   if (!pfState.user) {
     pfSetBody(`
       <section class="section">
-        <h1>Honest NSW boxing. Real records, fair fights.</h1>
-        <p class="sub">Prize Fighter NSW connects amateur and professional boxers across the state with fight nights, transparent matchmaking, and a season-long points leaderboard.</p>
+        <h1>Honest Central Coast boxing. Real records, fair fights.</h1>
+        <p class="sub">Fight Club Central Coast connects amateur and professional boxers across the Central Coast with fight nights, transparent matchmaking, and a season-long points leaderboard.</p>
         <div class="stat-row">
           <a href="#/signup" data-link class="btn btn-gold">Register as a fighter</a>
           <a href="#/login" data-link class="btn btn-outline">Log in</a>
