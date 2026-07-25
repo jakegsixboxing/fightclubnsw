@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="800" viewBox="0 0 600 800">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#161616"/>
+      <stop offset="100%" stop-color="#0a0a0a"/>
+    </linearGradient>
+    <linearGradient id="sil" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#2c2c2c"/>
+      <stop offset="100%" stop-color="#1c1c1c"/>
+    </linearGradient>
+  </defs>
+  <rect width="600" height="800" fill="url(#bg)"/>
+  <!-- ring ropes -->
+  <rect x="0" y="70" width="600" height="7" fill="#c8102e" opacity="0.85"/>
+  <rect x="0" y="94" width="600" height="7" fill="#c8102e" opacity="0.5"/>
+  <rect x="0" y="700" width="600" height="7" fill="#c8102e" opacity="0.5"/>
+  <rect x="0" y="724" width="600" height="7" fill="#c8102e" opacity="0.85"/>
+  <!-- fighter silhouette -->
+  <g transform="translate(300,400)">
+    <circle cx="0" cy="-70" r="86" fill="url(#sil)"/>
+    <path d="M -170 210 C -170 60 -96 6 0 6 C 96 6 170 60 170 210 Z" fill="url(#sil)"/>
+  </g>
+  <text x="300" y="775" text-anchor="middle" font-family="'Georgia', serif" font-weight="700"
+        font-size="30" letter-spacing="3" fill="#f2f2f2">PRIZE FIGHTER <tspan fill="#c8102e">NSW</tspan></text>
+</svg>

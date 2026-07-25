@@ -1,0 +1,1135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Prize Fighter NSW</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800;900&family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="icon" href="/favicon-64.png" type="image/png" sizes="64x64">
+<link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32">
+<link rel="manifest" href="/manifest.json">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Prize Fighter">
+<meta name="theme-color" content="#0a0a0a">
+<style>
+:root{
+  --black:#0a0a0a; --black2:#141414; --panel:#181818;
+  --gold:#cc2130; --gold-bright:#ff4552; --gold-mid:#d12435; --gold-dark:#7d1119;
+  --grey:#a9a49a; --cream:#f2ede2;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--black);color:var(--cream);font-family:'Inter',system-ui,-apple-system,Segoe UI,sans-serif;line-height:1.5}
+h1,h2,h3,.brand-text{font-family:'Cinzel','Georgia',serif}
+a{color:var(--gold-bright);text-decoration:none}
+a:hover{text-decoration:underline}
+.wrap{max-width:1080px;margin:0 auto;padding:0 20px}
+.site-header{border-bottom:3px solid var(--gold);background:var(--black2)}
+.header-inner{display:flex;align-items:center;justify-content:space-between;padding:14px 0;flex-wrap:wrap;gap:10px}
+.brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:1.1rem;color:var(--cream)}
+.brand-logo{height:40px}
+.brand-nsw{color:var(--gold)}
+.main-nav{display:flex;gap:16px;align-items:center;flex-wrap:wrap;font-size:0.9rem}
+.main-nav a{color:var(--grey)}
+.main-nav a.active,.main-nav a:hover{color:var(--gold-bright);text-decoration:none}
+.link-btn{background:none;border:none;color:var(--grey);font:inherit;cursor:pointer;padding:0}
+.link-btn:hover{color:var(--gold-bright)}
+.btn{display:inline-block;border:2px solid var(--gold);border-radius:6px;padding:10px 20px;font-weight:700;cursor:pointer;font-family:inherit;font-size:0.95rem;background:transparent;color:var(--cream)}
+.btn-gold{background:linear-gradient(180deg,var(--gold-bright),var(--gold-dark));border-color:var(--gold-dark);color:#fff}
+.btn-gold:hover{background:linear-gradient(180deg,var(--gold-bright),var(--gold-mid))}
+.btn-outline{background:transparent}
+.btn-small{padding:6px 14px;font-size:0.8rem}
+.btn[disabled]{opacity:0.5;cursor:not-allowed}
+main{min-height:70vh}
+.section{padding:36px 0}
+.section h1{font-size:1.8rem;margin:0 0 6px}
+.section .sub{color:var(--grey);margin:0 0 24px}
+.card{background:var(--panel);border:1px solid #2a2a2a;border-radius:10px;padding:20px}
+.grid{display:grid;gap:16px}
+.grid-2{grid-template-columns:repeat(auto-fill,minmax(260px,1fr))}
+.grid-3{grid-template-columns:repeat(auto-fill,minmax(220px,1fr))}
+.fighter-card{background:var(--panel);border:1px solid #2a2a2a;border-radius:10px;overflow:hidden;display:block;color:inherit}
+.fighter-card:hover{border-color:var(--gold-dark);text-decoration:none}
+.fighter-card img{width:100%;aspect-ratio:1;object-fit:cover;display:block;background:#222}
+.fighter-card .fc-body{padding:12px}
+.fighter-card .fc-name{font-weight:700;margin:0 0 4px}
+.fighter-meta{color:var(--grey);font-size:0.85rem;margin:0 0 8px}
+.badge{display:inline-block;border:1px solid var(--gold-dark);color:var(--gold-bright);border-radius:100px;padding:2px 10px;font-size:0.72rem;text-transform:uppercase;letter-spacing:.04em}
+.stat-row{display:flex;gap:18px;flex-wrap:wrap;margin:16px 0}
+.stat-box{border:2px solid var(--gold-dark);border-radius:8px;padding:10px 16px;text-align:center;min-width:90px}
+.stat-box .num{font-family:'Oswald',sans-serif;font-size:1.8rem;color:var(--gold-bright);display:block}
+.stat-box .lbl{font-size:0.72rem;text-transform:uppercase;color:var(--grey);letter-spacing:.05em}
+.empty-state{text-align:center;padding:60px 20px;color:var(--grey)}
+.back-link{display:inline-block;margin-bottom:16px;color:var(--grey)}
+.back-link:hover{color:var(--gold-bright)}
+table.data-table{width:100%;border-collapse:collapse}
+table.data-table th,table.data-table td{padding:8px 10px;border-bottom:1px solid #2a2a2a;text-align:left;font-size:0.9rem}
+table.data-table th{color:var(--gold-bright);text-transform:uppercase;font-size:0.72rem;letter-spacing:.05em}
+form.pf-form{max-width:520px}
+.field{margin-bottom:16px}
+.field label{display:block;margin-bottom:6px;font-weight:600;font-size:0.9rem}
+.field .hint{color:var(--grey);font-size:0.78rem;margin-top:4px}
+input[type=text],input[type=email],input[type=password],input[type=number],input[type=date],select,textarea{
+  width:100%;padding:10px 12px;border-radius:6px;border:1px solid #333;background:#0f0f0f;color:var(--cream);font:inherit
+}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--gold)}
+.radio-row{display:flex;gap:16px;flex-wrap:wrap}
+.radio-row label{display:flex;align-items:center;gap:6px;font-weight:400}
+.flash{padding:12px 16px;border-radius:6px;margin-bottom:18px;font-size:0.9rem}
+.flash-error{background:#3a1010;border:1px solid var(--gold-dark);color:#ffb3b8}
+.flash-success{background:#0f2a17;border:1px solid #1e5c33;color:#a8e8b8}
+.wizard-dots{display:flex;gap:8px;margin-bottom:6px}
+.wizard-dot{width:26px;height:26px;border-radius:50%;border:2px solid #333;color:var(--grey);display:flex;align-items:center;justify-content:center;font-size:0.75rem;cursor:pointer}
+.wizard-dot.active{border-color:var(--gold-bright);color:var(--gold-bright)}
+.wizard-dot.done{border-color:var(--gold-dark);color:var(--gold-dark)}
+.wizard-nav{display:flex;gap:10px;margin-top:20px}
+.tab-row{display:flex;gap:4px;border-bottom:1px solid #2a2a2a;margin-bottom:20px;flex-wrap:wrap}
+.tab-btn{background:none;border:none;color:var(--grey);font-family:'Oswald',sans-serif;padding:10px 16px;cursor:pointer;border-bottom:2px solid transparent;font-size:0.95rem}
+.tab-btn.active{color:var(--gold-bright);border-bottom-color:var(--gold)}
+.photo-preview{max-width:220px;border-radius:8px;display:none;margin-top:10px}
+.site-footer{border-top:1px solid #2a2a2a;padding:26px 0;text-align:center;color:var(--grey);font-size:0.85rem;margin-top:60px}
+.footer-logo{height:34px;margin-bottom:8px}
+.inline-form{display:inline}
+.offer-card{border:1px solid var(--gold-dark);border-radius:8px;padding:14px;margin-bottom:12px}
+.pill-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+.pill{border:1px solid #333;border-radius:100px;padding:6px 14px;font-size:0.85rem;cursor:pointer;background:none;color:var(--cream)}
+.pill.active{border-color:var(--gold);color:var(--gold-bright)}
+.spinner-msg{text-align:center;padding:40px;color:var(--grey)}
+@media (max-width:600px){.header-inner{flex-direction:column;align-items:flex-start}}
+</style>
+</head>
+<body>
+<header class="site-header">
+  <div class="wrap header-inner">
+    <a class="brand" href="#/" data-link>
+      <img src="/logo.png" alt="Prize Fighter NSW" class="brand-logo">
+      <span class="brand-text">PRIZE FIGHTER <span class="brand-nsw">NSW</span></span>
+    </a>
+    <nav class="main-nav" id="pf-nav"></nav>
+  </div>
+</header>
+<main class="wrap" id="app"><div class="spinner-msg">Loading…</div></main>
+<footer class="site-footer">
+  <div class="wrap">
+    <img src="/logo.png" alt="Prize Fighter NSW" class="footer-logo">
+    <p>Prize Fighter NSW &mdash; honest NSW boxing. Real records, fair fights.</p>
+  </div>
+</footer>
+
+<script type="module">
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+// ============================================================================
+// Prize Fighter NSW — single-file client app.
+// No build step, no framework. Supabase (Auth + Postgres w/ RLS + Storage)
+// is the entire backend; this file only talks to Supabase directly.
+// Naming convention: everything belonging to this app is prefixed `pf`.
+// ============================================================================
+
+const SUPABASE_URL = "https://xawlbpjquylkfmvrlfpo.supabase.co";
+const SUPABASE_KEY = "sb_publishable_8FAabd5jdglwzPnFb7qPJw_vBCrkN9V";
+const pfSupabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+const PF_BUCKET = "pf-photos";
+const PF_EVENT_TYPES = ["Amateur", "Pro-Am", "Professional"];
+const PF_SEASON = "2026";
+
+// ---------------------------------------------------------------------------
+// State
+// ---------------------------------------------------------------------------
+const pfState = {
+  session: null,
+  user: null,
+  fighter: null,   // this user's own pf_fighters row, or null
+  isAdmin: false,
+  ready: false,
+};
+
+const pfApp = document.getElementById("app");
+const pfNavEl = document.getElementById("pf-nav");
+
+function pfEscape(str) {
+  return String(str ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function pfFlash(message, kind = "error") {
+  if (!message) return "";
+  return `<div class="flash flash-${kind}">${pfEscape(message)}</div>`;
+}
+
+// ---------------------------------------------------------------------------
+// Auth bootstrap
+// ---------------------------------------------------------------------------
+async function pfRefreshSession() {
+  const { data } = await pfSupabase.auth.getSession();
+  pfState.session = data.session;
+  pfState.user = data.session ? data.session.user : null;
+
+  if (pfState.user) {
+    const [{ data: fighterRow }, { data: adminRow }] = await Promise.all([
+      pfSupabase.from("pf_fighters").select("*").eq("user_id", pfState.user.id).maybeSingle(),
+      pfSupabase.rpc("pf_is_admin"),
+    ]);
+    pfState.fighter = fighterRow || null;
+    pfState.isAdmin = !!adminRow;
+  } else {
+    pfState.fighter = null;
+    pfState.isAdmin = false;
+  }
+}
+
+pfSupabase.auth.onAuthStateChange(async (_event, session) => {
+  pfState.session = session;
+  pfState.user = session ? session.user : null;
+  await pfRefreshSession();
+  pfRenderNav();
+  pfRoute();
+});
+
+// ---------------------------------------------------------------------------
+// Data access layer (pf_db.*) — mirrors the shape of the old lib/db.mjs, just
+// running client-side against RLS-protected tables/views + RPCs instead of a
+// service-role key.
+// ---------------------------------------------------------------------------
+const pfDb = {
+  async weightDivisions(boxerType) {
+    const { data, error } = await pfSupabase.from("pf_weight_divisions").select("*").eq("boxer_type", boxerType).order("sort_order");
+    if (error) throw error;
+    return data;
+  },
+  async weightDivisionsByType() {
+    const [amateur, professional] = await Promise.all([pfDb.weightDivisions("amateur"), pfDb.weightDivisions("professional")]);
+    return { amateur, professional };
+  },
+  async weightDivisionById(id) {
+    if (id == null) return null;
+    const { data } = await pfSupabase.from("pf_weight_divisions").select("*").eq("id", id).maybeSingle();
+    return data || null;
+  },
+  async fighterById(id) {
+    const { data } = await pfSupabase.from("pf_fighters_flat").select("*").eq("id", id).maybeSingle();
+    return data || null;
+  },
+  async allFighters() {
+    const { data, error } = await pfSupabase.from("pf_fighters_flat").select("*").order("created_at", { ascending: false });
+    if (error) throw error;
+    return data;
+  },
+  async fightersForPicker() {
+    const { data, error } = await pfSupabase.from("pf_fighters_flat")
+      .select("id, full_name, gym_name, boxer_type, wins, losses, draws, availability, division_label, division_name, division_type, division_sort")
+      .order("division_type").order("division_sort").order("full_name");
+    if (error) throw error;
+    return data;
+  },
+  async createFighter(userId, record) {
+    const { data, error } = await pfSupabase.from("pf_fighters").insert({ user_id: userId, ...record }).select("id").limit(1);
+    if (error) throw error;
+    return data[0].id;
+  },
+  async updateFighter(fighterId, record) {
+    const { error } = await pfSupabase.from("pf_fighters").update({ ...record, updated_at: new Date().toISOString() }).eq("id", fighterId);
+    if (error) throw error;
+  },
+  async setFighterPhoto(fighterId, url) {
+    const { error } = await pfSupabase.from("pf_fighters").update({ photo_path: url }).eq("id", fighterId);
+    if (error) throw error;
+  },
+  async events() {
+    const { data, error } = await pfSupabase.from("pf_events_flat").select("*").order("event_date").order("created_at", { ascending: false });
+    if (error) throw error;
+    return data;
+  },
+  async eventById(id) {
+    const { data } = await pfSupabase.from("pf_events_flat").select("*").eq("id", id).maybeSingle();
+    return data || null;
+  },
+  async createEvent(e) {
+    const { data, error } = await pfSupabase.from("pf_events").insert(e).select("id").limit(1);
+    if (error) throw error;
+    return data[0].id;
+  },
+  async setEventPhoto(eventId, url) {
+    const { error } = await pfSupabase.from("pf_events").update({ photo_path: url }).eq("id", eventId);
+    if (error) throw error;
+  },
+  async setEventVideo(eventId, url) {
+    const { error } = await pfSupabase.from("pf_events").update({ video_path: url }).eq("id", eventId);
+    if (error) throw error;
+  },
+  async nominate(eventId, fighterId) {
+    const { error } = await pfSupabase.from("pf_nominations").upsert({ event_id: eventId, fighter_id: fighterId }, { onConflict: "event_id,fighter_id", ignoreDuplicates: true });
+    if (error) throw error;
+  },
+  async withdrawNomination(eventId, fighterId) {
+    const { error } = await pfSupabase.from("pf_nominations").delete().eq("event_id", eventId).eq("fighter_id", fighterId);
+    if (error) throw error;
+  },
+  async hasNominated(eventId, fighterId) {
+    const { count } = await pfSupabase.from("pf_nominations").select("id", { count: "exact", head: true }).eq("event_id", eventId).eq("fighter_id", fighterId);
+    return (count || 0) > 0;
+  },
+  async nomineesForEvent(eventId) {
+    const { data, error } = await pfSupabase.from("pf_nominations_flat").select("*").eq("nom_event_id", eventId).order("division_type").order("division_sort").order("full_name");
+    if (error) throw error;
+    return data;
+  },
+  async matchingPoolFighters() {
+    const { data: nomRows, error } = await pfSupabase.from("pf_nominations").select("fighter_id, event_id");
+    if (error) throw error;
+    if (!nomRows.length) return [];
+    const fighterIds = [...new Set(nomRows.map((r) => r.fighter_id))];
+    const eventIds = [...new Set(nomRows.map((r) => r.event_id))];
+    const [{ data: fighters }, { data: events }] = await Promise.all([
+      pfSupabase.from("pf_fighters_flat").select("*").in("id", fighterIds),
+      pfSupabase.from("pf_events").select("id, title").in("id", eventIds),
+    ]);
+    const eventTitleById = new Map((events || []).map((e) => [e.id, e.title]));
+    const eventsByFighter = new Map();
+    for (const r of nomRows) {
+      const list = eventsByFighter.get(r.fighter_id) || [];
+      const title = eventTitleById.get(r.event_id);
+      if (title) list.push(title);
+      eventsByFighter.set(r.fighter_id, list);
+    }
+    return (fighters || [])
+      .map((f) => ({ ...f, nominated_events: eventsByFighter.get(f.id) || [] }))
+      .sort((a, b) => {
+        if ((a.division_type || "") !== (b.division_type || "")) return (a.division_type || "").localeCompare(b.division_type || "");
+        if ((a.division_sort ?? 0) !== (b.division_sort ?? 0)) return (a.division_sort ?? 0) - (b.division_sort ?? 0);
+        return String(a.full_name).localeCompare(String(b.full_name));
+      });
+  },
+  async createMatch({ fighter_a_id, fighter_b_id, event_id, agreed_weight, note }) {
+    const { data, error } = await pfSupabase.from("pf_matches").insert({
+      fighter_a_id, fighter_b_id, event_id: event_id || null,
+      proposed_by: pfState.user.id, agreed_weight: agreed_weight || null, note: note || null,
+    }).select("id").limit(1);
+    if (error) throw error;
+    return data[0].id;
+  },
+  async allMatchesAdmin() {
+    const { data, error } = await pfSupabase.from("pf_matches_flat").select("*").not("status", "in", "(cancelled,declined)");
+    if (error) throw error;
+    const order = { agreed: 0, proposed: 1, confirmed: 2 };
+    return data.sort((a, b) => {
+      const oa = order[a.status] ?? 3, ob = order[b.status] ?? 3;
+      if (oa !== ob) return oa - ob;
+      return new Date(b.updated_at) - new Date(a.updated_at);
+    });
+  },
+  async pendingOffersForFighter(fighterId) {
+    const { data, error } = await pfSupabase.from("pf_matches_flat").select("*").eq("status", "proposed")
+      .or(`and(fighter_a_id.eq.${fighterId},a_response.eq.pending),and(fighter_b_id.eq.${fighterId},b_response.eq.pending)`)
+      .order("created_at", { ascending: false });
+    if (error) throw error;
+    return data;
+  },
+  async boutsForFighter(fighterId) {
+    const { data, error } = await pfSupabase.from("pf_matches_flat").select("*")
+      .or(`fighter_a_id.eq.${fighterId},fighter_b_id.eq.${fighterId}`).in("status", ["agreed", "confirmed"]);
+    if (error) throw error;
+    return data.sort((a, b) => {
+      if (a.status !== b.status) return a.status === "confirmed" ? 1 : -1;
+      return new Date(b.updated_at) - new Date(a.updated_at);
+    });
+  },
+  async confirmedMatchesForEvent(eventId) {
+    const { data, error } = await pfSupabase.from("pf_matches_flat").select("*").eq("event_id", eventId).eq("status", "confirmed");
+    if (error) throw error;
+    return data.sort((a, b) => (a.a_division || "").localeCompare(b.a_division || ""));
+  },
+  async confirmedMatchesAll() {
+    const { data, error } = await pfSupabase.from("pf_matches_flat").select("*").eq("status", "confirmed");
+    if (error) throw error;
+    return data.sort((a, b) => {
+      const ad = a.event_date ? new Date(a.event_date) : new Date(8640000000000000);
+      const bd = b.event_date ? new Date(b.event_date) : new Date(8640000000000000);
+      if (ad - bd !== 0) return ad - bd;
+      return new Date(b.updated_at) - new Date(a.updated_at);
+    });
+  },
+  async respondToMatch(matchId, response) {
+    const { error } = await pfSupabase.rpc("pf_respond_to_match", { p_match_id: matchId, p_response: response });
+    if (error) throw error;
+  },
+  async confirmMatch(matchId, eventId) {
+    const { error } = await pfSupabase.rpc("pf_confirm_match", { p_match_id: matchId, p_event_id: eventId || null });
+    if (error) throw error;
+  },
+  async placeMatchOnEvent(matchId, eventId) {
+    const { error } = await pfSupabase.from("pf_matches").update({ event_id: eventId || null, updated_at: new Date().toISOString() }).eq("id", matchId);
+    if (error) throw error;
+  },
+  async cancelMatch(matchId) {
+    const { error } = await pfSupabase.rpc("pf_cancel_match", { p_match_id: matchId });
+    if (error) throw error;
+  },
+  async recordMatchResult({ matchId, winnerFighterId, method, fotnFighterId }) {
+    const { error } = await pfSupabase.rpc("pf_record_match_result", {
+      p_match_id: matchId, p_winner_fighter_id: winnerFighterId || null, p_method: method, p_fotn_fighter_id: fotnFighterId || null,
+    });
+    if (error) throw error;
+  },
+  async leaderboard(season) {
+    const { data: results, error } = await pfSupabase.from("pf_results").select("*").eq("season", season || PF_SEASON);
+    if (error) throw error;
+    if (!results.length) return [];
+    const byFighter = new Map();
+    for (const r of results) {
+      const agg = byFighter.get(r.fighter_id) || { points: 0, fights: 0, wins_season: 0, fotn_count: 0 };
+      agg.points += r.points; agg.fights += 1;
+      if (r.outcome === "win") agg.wins_season += 1;
+      if (r.fighter_of_night) agg.fotn_count += 1;
+      byFighter.set(r.fighter_id, agg);
+    }
+    const fighterIds = [...byFighter.keys()];
+    const { data: fighters } = await pfSupabase.from("pf_fighters_flat").select("*").in("id", fighterIds);
+    const byId = new Map((fighters || []).map((f) => [f.id, f]));
+    const rows = fighterIds.map((id) => ({ ...byId.get(id), ...byFighter.get(id) })).filter((f) => f.id != null && f.points > 0);
+    rows.sort((a, b) => {
+      if (b.points !== a.points) return b.points - a.points;
+      if (b.wins_season !== a.wins_season) return b.wins_season - a.wins_season;
+      return String(a.full_name).localeCompare(String(b.full_name));
+    });
+    return rows;
+  },
+  async fighterPoints(fighterId, season) {
+    const { data } = await pfSupabase.from("pf_results").select("points").eq("fighter_id", fighterId).eq("season", season || PF_SEASON);
+    return (data || []).reduce((sum, r) => sum + r.points, 0);
+  },
+  async countFighters() {
+    const { count } = await pfSupabase.from("pf_fighters").select("*", { count: "exact", head: true });
+    return count || 0;
+  },
+  async countEvents() {
+    const { count } = await pfSupabase.from("pf_events").select("*", { count: "exact", head: true });
+    return count || 0;
+  },
+};
+
+// ---------------------------------------------------------------------------
+// Photo handling — client-side canvas resize replaces server-side sharp.
+// ---------------------------------------------------------------------------
+const PF_ALLOWED_PHOTO_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
+
+function pfResizeImageToBlob(file, maxDim = 1400, quality = 0.88) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      let { width, height } = img;
+      if (width > maxDim || height > maxDim) {
+        if (width >= height) { height = Math.round((height * maxDim) / width); width = maxDim; }
+        else { width = Math.round((width * maxDim) / height); height = maxDim; }
+      }
+      const canvas = document.createElement("canvas");
+      canvas.width = width; canvas.height = height;
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(img, 0, 0, width, height);
+      URL.revokeObjectURL(url);
+      canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new Error("Could not process image."))), "image/jpeg", quality);
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("Could not read that image file.")); };
+    img.src = url;
+  });
+}
+
+async function pfUploadPhoto(objectPath, blob) {
+  const { error } = await pfSupabase.storage.from(PF_BUCKET).upload(objectPath, blob, {
+    contentType: "image/jpeg", upsert: true, cacheControl: "300",
+  });
+  if (error) throw error;
+  const { data } = pfSupabase.storage.from(PF_BUCKET).getPublicUrl(objectPath);
+  return `${data.publicUrl}?v=${Date.now()}`;
+}
+
+async function pfSaveFighterPhoto(fighterId, file) {
+  const blob = await pfResizeImageToBlob(file, 1400, 0.88);
+  return pfUploadPhoto(`fighters/fighter-${fighterId}.jpg`, blob);
+}
+
+async function pfSaveEventPhoto(eventId, file) {
+  const blob = await pfResizeImageToBlob(file, 1600, 0.86);
+  return pfUploadPhoto(`events/event-${eventId}.jpg`, blob);
+}
+
+// ---------------------------------------------------------------------------
+// Bio builder (mirrors lib/bio.mjs)
+// ---------------------------------------------------------------------------
+function pfBuildBio(fighter, division) {
+  const bits = [];
+  bits.push(`${pfEscape(fighter.full_name)} trains out of ${pfEscape(fighter.gym_name)} in ${pfEscape(fighter.gym_town)}, coached by ${pfEscape(fighter.coach_name)}.`);
+  const record = `${fighter.wins || 0}-${fighter.losses || 0}-${fighter.draws || 0}`;
+  bits.push(`Official record: ${record}${fighter.ko_tko_wins ? ` (${fighter.ko_tko_wins} by KO/TKO)` : ""}.`);
+  if (division) bits.push(`Competes as a${fighter.boxer_type === "amateur" ? "n" : ""} ${pfEscape(fighter.boxer_type)} in the ${pfEscape(division.label)} division.`);
+  if (fighter.has_title) {
+    const status = fighter.title_current ? "current" : "former";
+    const region = fighter.title_level === "regional" && fighter.title_region ? ` (${pfEscape(fighter.title_region)})` : "";
+    bits.push(`${status === "current" ? "Currently holds" : "Formerly held"} a ${pfEscape(fighter.title_level)}${region} title.`);
+  }
+  return bits.join(" ");
+}
+
+// ---------------------------------------------------------------------------
+// Layout
+// ---------------------------------------------------------------------------
+function pfRenderNav() {
+  const u = pfState.user;
+  const items = u ? [
+    ["#/fighters", "Fighter Profiles", "roster"],
+    ["#/events", "Events", "events"],
+    ["#/matching-pool", "Matching Pool", "matching-pool"],
+    ["#/confirmed", "Confirmed", "confirmed"],
+    ["#/points", "Points", "points"],
+  ] : [];
+  const active = location.hash.replace(/^#/, "") || "/";
+  const isActive = (href) => (href === "#/" ? active === "/" : active.startsWith(href.slice(1)));
+  let html = items.map(([href, label]) => `<a href="${href}" data-link class="${isActive(href) ? "active" : ""}">${label}</a>`).join("");
+  if (u) {
+    html += `<a href="#/me" data-link class="${active === "/me" ? "active" : ""}">My Profile</a>`;
+    html += `<button class="link-btn" data-action="logout">Log Out</button>`;
+  } else {
+    html += `<a href="#/login" data-link class="${active === "/login" ? "active" : ""}">Log In</a>`;
+    html += `<a href="#/signup" data-link class="btn btn-gold btn-small">Register</a>`;
+  }
+  pfNavEl.innerHTML = html;
+}
+
+function pfSetBody(html) {
+  pfApp.innerHTML = html;
+  window.scrollTo(0, 0);
+}
+
+function pfRequireLogin() {
+  if (!pfState.user) { location.hash = "#/login"; return false; }
+  return true;
+}
+
+// ---------------------------------------------------------------------------
+// Views
+// ---------------------------------------------------------------------------
+async function pfViewHome() {
+  if (!pfState.user) {
+    pfSetBody(`
+      <section class="section">
+        <h1>Honest NSW boxing. Real records, fair fights.</h1>
+        <p class="sub">Prize Fighter NSW connects amateur and professional boxers across the state with fight nights, transparent matchmaking, and a season-long points leaderboard.</p>
+        <div class="stat-row">
+          <a href="#/signup" data-link class="btn btn-gold">Register as a fighter</a>
+          <a href="#/login" data-link class="btn btn-outline">Log in</a>
+        </div>
+      </section>`);
+    return;
+  }
+  if (!pfState.fighter) { location.hash = "#/register"; return; }
+  pfSetBody(`<div class="spinner-msg">Loading your dashboard…</div>`);
+  const [fighterCount, eventCount, offers, bouts] = await Promise.all([
+    pfDb.countFighters(), pfDb.countEvents(),
+    pfDb.pendingOffersForFighter(pfState.fighter.id), pfDb.boutsForFighter(pfState.fighter.id),
+  ]);
+  const offersHtml = offers.length ? offers.map((o) => {
+    const isA = o.fighter_a_id === pfState.fighter.id;
+    const opponent = isA ? o.b_name : o.a_name;
+    return `<div class="offer-card">
+      <p><strong>Fight offer</strong> vs ${pfEscape(opponent)}${o.agreed_weight ? ` &middot; ${pfEscape(o.agreed_weight)}` : ""}</p>
+      ${o.note ? `<p class="fighter-meta">${pfEscape(o.note)}</p>` : ""}
+      <div class="stat-row" style="margin:8px 0 0">
+        <button class="btn btn-gold btn-small" data-action="respond-match" data-match-id="${o.id}" data-response="accepted">Accept</button>
+        <button class="btn btn-outline btn-small" data-action="respond-match" data-match-id="${o.id}" data-response="declined">Decline</button>
+      </div>
+    </div>`;
+  }).join("") : `<p class="fighter-meta">No pending fight offers right now.</p>`;
+
+  const boutsHtml = bouts.length ? bouts.map((b) => {
+    const isA = b.fighter_a_id === pfState.fighter.id;
+    const opponent = isA ? b.b_name : b.a_name;
+    return `<div class="offer-card"><p><strong>${b.status === "confirmed" ? "Confirmed bout" : "Agreed — awaiting event"}</strong> vs ${pfEscape(opponent)}${b.event_title ? ` &middot; ${pfEscape(b.event_title)}` : ""}</p></div>`;
+  }).join("") : `<p class="fighter-meta">No upcoming bouts yet.</p>`;
+
+  pfSetBody(`
+    <section class="section">
+      <h1>Welcome back, ${pfEscape(pfState.fighter.full_name)}</h1>
+      <p class="sub">${pfEscape(pfState.fighter.gym_name)} &middot; ${pfEscape(pfState.fighter.boxer_type)}</p>
+      <div class="stat-row">
+        <div class="stat-box"><span class="num">${fighterCount}</span><span class="lbl">Fighters</span></div>
+        <div class="stat-box"><span class="num">${eventCount}</span><span class="lbl">Fight Nights</span></div>
+      </div>
+      <h2>Your pending offers</h2>
+      ${offersHtml}
+      <h2>Your bouts</h2>
+      ${boutsHtml}
+      ${pfState.isAdmin ? `<h2>Admin</h2><div class="stat-row"><a href="#/matchmaking" data-link class="btn btn-outline btn-small">Matchmaking</a><a href="#/events/new" data-link class="btn btn-outline btn-small">Create fight night</a></div>` : ""}
+    </section>`);
+}
+
+function pfSignupPage(error) {
+  return `
+    <section class="section">
+      <h1>Register</h1>
+      ${pfFlash(error)}
+      <form class="pf-form" data-form="signup">
+        <div class="field"><label>Email</label><input type="email" name="email" autocomplete="email" required></div>
+        <div class="field"><label>Password</label><input type="password" name="password" autocomplete="new-password" minlength="8" required><p class="hint">At least 8 characters.</p></div>
+        <div class="field"><label>Confirm password</label><input type="password" name="password2" autocomplete="new-password" minlength="8" required></div>
+        <button class="btn btn-gold" type="submit">Create account</button>
+      </form>
+      <p class="fighter-meta" style="margin-top:16px">Already registered? <a href="#/login" data-link>Log in</a></p>
+    </section>`;
+}
+
+function pfLoginPage(error) {
+  return `
+    <section class="section">
+      <h1>Log In</h1>
+      ${pfFlash(error)}
+      <form class="pf-form" data-form="login">
+        <div class="field"><label>Email</label><input type="email" name="email" autocomplete="email" required></div>
+        <div class="field"><label>Password</label><input type="password" name="password" autocomplete="current-password" required></div>
+        <button class="btn btn-gold" type="submit">Log in</button>
+      </form>
+      <p class="fighter-meta" style="margin-top:16px">New here? <a href="#/signup" data-link>Register</a></p>
+    </section>`;
+}
+
+async function pfViewRegister(prefill = {}, error = "") {
+  if (!pfRequireLogin()) return;
+  const existing = pfState.fighter || {};
+  const isEdit = !!existing.id;
+  const fighter = { ...existing, ...prefill };
+  const divisions = await pfDb.weightDivisionsByType();
+  const boxerType = fighter.boxer_type || "amateur";
+  const divisionOptions = (divisions[boxerType] || []).map((d) => `<option value="${d.id}" ${String(d.id) === String(fighter.weight_division_id) ? "selected" : ""}>${pfEscape(d.label)}</option>`).join("");
+
+  pfSetBody(`
+    <section class="section">
+      <h1>${isEdit ? "Edit Your Profile" : "Fighter Registration"}</h1>
+      ${pfFlash(error)}
+      <form class="pf-form" data-form="register" data-fighter-id="${isEdit ? existing.id : ""}">
+        <div class="field"><label>Full name</label><input type="text" name="full_name" value="${pfEscape(fighter.full_name || "")}" required></div>
+        <div class="field"><label>Gym name</label><input type="text" name="gym_name" value="${pfEscape(fighter.gym_name || "")}" required></div>
+        <div class="field"><label>Coach name</label><input type="text" name="coach_name" value="${pfEscape(fighter.coach_name || "")}" required></div>
+        <div class="field"><label>Gym town</label><input type="text" name="gym_town" value="${pfEscape(fighter.gym_town || "")}" required></div>
+        <div class="field"><label>Gym postcode</label><input type="text" name="gym_postcode" value="${pfEscape(fighter.gym_postcode || "")}" pattern="\\d{4}" required></div>
+        <div class="field">
+          <label>Boxer type</label>
+          <div class="radio-row">
+            <label><input type="radio" name="boxer_type" value="amateur" ${boxerType === "amateur" ? "checked" : ""}> Amateur</label>
+            <label><input type="radio" name="boxer_type" value="professional" ${boxerType === "professional" ? "checked" : ""}> Professional</label>
+          </div>
+        </div>
+        <div class="field"><label>Weight division</label><select name="weight_division_id" id="pf-weight-select" required>${divisionOptions}</select></div>
+        <div class="field"><label>Wins</label><input type="number" name="wins" min="0" value="${fighter.wins ?? 0}"></div>
+        <div class="field"><label>Losses</label><input type="number" name="losses" min="0" value="${fighter.losses ?? 0}"></div>
+        <div class="field"><label>Draws</label><input type="number" name="draws" min="0" value="${fighter.draws ?? 0}"></div>
+        <div class="field"><label>KO/TKO wins</label><input type="number" name="ko_tko_wins" min="0" value="${fighter.ko_tko_wins ?? 0}"></div>
+        <div class="field">
+          <label>Do you hold a title?</label>
+          <div class="radio-row">
+            <label><input type="radio" name="has_title" value="yes" ${fighter.has_title ? "checked" : ""}> Yes</label>
+            <label><input type="radio" name="has_title" value="no" ${!fighter.has_title ? "checked" : ""}> No</label>
+          </div>
+        </div>
+        <div class="field" id="pf-title-details" style="${fighter.has_title ? "" : "display:none"}">
+          <label>Title level</label>
+          <div class="radio-row">
+            <label><input type="radio" name="title_level" value="regional" ${fighter.title_level === "regional" ? "checked" : ""}> Regional</label>
+            <label><input type="radio" name="title_level" value="nsw" ${fighter.title_level === "nsw" ? "checked" : ""}> NSW</label>
+            <label><input type="radio" name="title_level" value="australian" ${fighter.title_level === "australian" ? "checked" : ""}> Australian</label>
+          </div>
+          <div class="radio-row" style="margin-top:8px">
+            <label><input type="radio" name="title_current" value="current" ${fighter.title_current ? "checked" : ""}> Current holder</label>
+            <label><input type="radio" name="title_current" value="former" ${fighter.title_current === false && fighter.has_title ? "checked" : ""}> Former holder</label>
+          </div>
+        </div>
+        <div class="field">
+          <label>Availability</label>
+          <select name="availability">
+            <option value="open" ${fighter.availability === "open" ? "selected" : ""}>Open to fight</option>
+            <option value="selective" ${fighter.availability === "selective" ? "selected" : ""}>Selective</option>
+            <option value="unavailable" ${fighter.availability === "unavailable" ? "selected" : ""}>Unavailable</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Photo${isEdit ? " (leave blank to keep current)" : ""}</label>
+          <input type="file" name="photo" id="pf-photo-input" accept="image/jpeg,image/png,image/webp" ${isEdit ? "" : "required"}>
+          <img id="pf-photo-preview" class="photo-preview" src="${fighter.photo_path ? pfEscape(fighter.photo_path) : ""}" style="${fighter.photo_path ? "display:block" : ""}">
+        </div>
+        <button class="btn btn-gold" type="submit" data-submit-label="${isEdit ? "Save changes" : "Complete registration"}">${isEdit ? "Save changes" : "Complete registration"}</button>
+      </form>
+    </section>`);
+
+  document.getElementById("pf-photo-input")?.addEventListener("change", (e) => {
+    const file = e.target.files && e.target.files[0];
+    const preview = document.getElementById("pf-photo-preview");
+    if (!file || !preview) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => { preview.src = ev.target.result; preview.style.display = "block"; };
+    reader.readAsDataURL(file);
+  });
+  document.querySelectorAll('input[name="has_title"]').forEach((r) => r.addEventListener("change", () => {
+    const checked = document.querySelector('input[name="has_title"]:checked');
+    document.getElementById("pf-title-details").style.display = checked && checked.value === "yes" ? "block" : "none";
+  }));
+  document.querySelectorAll('input[name="boxer_type"]').forEach((r) => r.addEventListener("change", async () => {
+    const type = document.querySelector('input[name="boxer_type"]:checked').value;
+    const list = (await pfDb.weightDivisions(type)) || [];
+    document.getElementById("pf-weight-select").innerHTML = list.map((d) => `<option value="${d.id}">${pfEscape(d.label)}</option>`).join("");
+  }));
+}
+
+async function pfViewFighterProfile(id) {
+  if (!pfRequireLogin()) return;
+  pfSetBody(`<div class="spinner-msg">Loading fighter…</div>`);
+  const fighter = await pfDb.fighterById(id);
+  if (!fighter) { pfSetBody(`<div class="empty-state"><h2>Fighter not found</h2><a href="#/fighters" data-link>Back to profiles</a></div>`); return; }
+  const division = await pfDb.weightDivisionById(fighter.weight_division_id);
+  const bio = pfBuildBio(fighter, division);
+  const isOwner = pfState.user && pfState.user.id === fighter.user_id;
+  const [bouts, points] = await Promise.all([pfDb.boutsForFighter(fighter.id), pfDb.fighterPoints(fighter.id, PF_SEASON)]);
+
+  const boutsHtml = bouts.length ? `<table class="data-table"><thead><tr><th>Opponent</th><th>Status</th><th>Event</th></tr></thead><tbody>${bouts.map((b) => {
+    const isA = b.fighter_a_id === fighter.id;
+    const opponent = isA ? b.b_name : b.a_name;
+    return `<tr><td>${pfEscape(opponent)}</td><td>${pfEscape(b.status)}</td><td>${pfEscape(b.event_title || "TBC")}</td></tr>`;
+  }).join("")}</tbody></table>` : `<p class="fighter-meta">No bouts yet.</p>`;
+
+  pfSetBody(`
+    <section class="section">
+      <a href="#/fighters" data-link class="back-link">&larr; Fighter Profiles</a>
+      <div class="grid" style="grid-template-columns:220px 1fr;align-items:start">
+        <img src="${fighter.photo_path ? pfEscape(fighter.photo_path) : '/fighter-placeholder.svg'}" style="width:100%;border-radius:10px;object-fit:cover;aspect-ratio:1">
+        <div>
+          <h1>${pfEscape(fighter.full_name)}${fighter.has_title ? ` <span class="badge">${pfEscape(fighter.title_level)} title</span>` : ""}</h1>
+          <p class="sub">${pfEscape(fighter.gym_name)}, ${pfEscape(fighter.gym_town)} &middot; Coach ${pfEscape(fighter.coach_name)}</p>
+          <div class="stat-row">
+            <div class="stat-box"><span class="num">${fighter.wins || 0}</span><span class="lbl">Wins</span></div>
+            <div class="stat-box"><span class="num">${fighter.losses || 0}</span><span class="lbl">Losses</span></div>
+            <div class="stat-box"><span class="num">${fighter.draws || 0}</span><span class="lbl">Draws</span></div>
+            <div class="stat-box"><span class="num">${points}</span><span class="lbl">Points</span></div>
+          </div>
+          <p>${bio}</p>
+          ${isOwner ? `<a href="#/register" data-link class="btn btn-outline btn-small">Edit profile</a>` : ""}
+        </div>
+      </div>
+      <h2>Bouts</h2>
+      ${boutsHtml}
+    </section>`);
+}
+
+async function pfViewFighterProfiles() {
+  if (!pfRequireLogin()) return;
+  pfSetBody(`<div class="spinner-msg">Loading roster…</div>`);
+  const fighters = await pfDb.allFighters();
+  const cards = fighters.map((f) => `
+    <a href="#/fighters/${f.id}" data-link class="fighter-card">
+      <img src="${f.photo_path ? pfEscape(f.photo_path) : '/fighter-placeholder.svg'}" alt="${pfEscape(f.full_name)}">
+      <div class="fc-body">
+        <p class="fc-name">${pfEscape(f.full_name)}</p>
+        <p class="fighter-meta">${pfEscape(f.gym_name)} &middot; ${pfEscape(f.division_label || f.boxer_type)}</p>
+        <p class="fighter-meta">${f.wins || 0}-${f.losses || 0}-${f.draws || 0}</p>
+      </div>
+    </a>`).join("");
+  pfSetBody(`
+    <section class="section">
+      <h1>Fighter Profiles</h1>
+      <p class="sub">${fighters.length} registered fighters</p>
+      <div class="grid grid-3">${cards || '<p class="empty-state">No fighters registered yet.</p>'}</div>
+    </section>`);
+}
+
+async function pfViewEventsList() {
+  if (!pfRequireLogin()) return;
+  pfSetBody(`<div class="spinner-msg">Loading fight nights…</div>`);
+  const events = await pfDb.events();
+  const cards = events.map((e) => `
+    <a href="#/events/${e.id}" data-link class="fighter-card">
+      <img src="${e.photo_path ? pfEscape(e.photo_path) : '/logo.png'}" alt="${pfEscape(e.title)}" style="aspect-ratio:16/9">
+      <div class="fc-body">
+        <p class="fc-name">${pfEscape(e.title)}</p>
+        <p class="fighter-meta">${pfEscape(e.event_date)} &middot; ${pfEscape(e.location)}</p>
+        <span class="badge">${pfEscape(e.event_type)}</span>
+      </div>
+    </a>`).join("");
+  pfSetBody(`
+    <section class="section">
+      <h1>Upcoming Fight Nights</h1>
+      ${pfState.isAdmin ? `<div class="stat-row"><a href="#/events/new" data-link class="btn btn-gold btn-small">Create fight night</a></div>` : ""}
+      <div class="grid grid-2">${cards || '<p class="empty-state">No fight nights scheduled yet.</p>'}</div>
+    </section>`);
+}
+
+async function pfViewEventForm() {
+  if (!pfRequireLogin()) return;
+  if (!pfState.isAdmin) { location.hash = "#/events"; return; }
+  pfSetBody(`
+    <section class="section">
+      <a href="#/events" data-link class="back-link">&larr; Fight nights</a>
+      <h1>Create Fight Night</h1>
+      <form class="pf-form" data-form="event">
+        <div class="field"><label>Title</label><input type="text" name="title" required></div>
+        <div class="field"><label>Location (town)</label><input type="text" name="location" required></div>
+        <div class="field"><label>Venue</label><input type="text" name="venue"></div>
+        <div class="field"><label>Date</label><input type="date" name="event_date" required></div>
+        <div class="field"><label>Night type</label>
+          <select name="event_type" required>${PF_EVENT_TYPES.map((t) => `<option value="${t}">${t}</option>`).join("")}</select>
+        </div>
+        <div class="field"><label>Description</label><textarea name="description" rows="4"></textarea></div>
+        <div class="field"><label>Poster photo</label><input type="file" name="photo" accept="image/jpeg,image/png,image/webp" required></div>
+        <button class="btn btn-gold" type="submit">Create fight night</button>
+      </form>
+    </section>`);
+}
+
+async function pfViewEventDetail(id) {
+  if (!pfRequireLogin()) return;
+  pfSetBody(`<div class="spinner-msg">Loading…</div>`);
+  const event = await pfDb.eventById(id);
+  if (!event) { pfSetBody(`<div class="empty-state"><h2>Fight night not found</h2><a href="#/events" data-link>Back</a></div>`); return; }
+  const [nominees, card] = await Promise.all([pfDb.nomineesForEvent(event.id), pfDb.confirmedMatchesForEvent(event.id)]);
+  const myFighter = pfState.fighter;
+  const alreadyNominated = myFighter ? await pfDb.hasNominated(event.id, myFighter.id) : false;
+
+  const nomineesHtml = nominees.length ? nominees.map((n) => `<li>${pfEscape(n.full_name)} &middot; ${pfEscape(n.gym_name)}</li>`).join("") : `<li class="fighter-meta">No nominations yet.</li>`;
+  const cardHtml = card.length ? card.map((m) => `<div class="offer-card"><strong>${pfEscape(m.a_name)}</strong> vs <strong>${pfEscape(m.b_name)}</strong>${m.agreed_weight ? ` &middot; ${pfEscape(m.agreed_weight)}` : ""}</div>`).join("") : `<p class="fighter-meta">Fight card not finalised yet.</p>`;
+
+  pfSetBody(`
+    <section class="section">
+      <a href="#/events" data-link class="back-link">&larr; Fight nights</a>
+      <img src="${event.photo_path ? pfEscape(event.photo_path) : '/logo.png'}" style="width:100%;max-height:320px;object-fit:cover;border-radius:10px;margin-bottom:16px">
+      <h1>${pfEscape(event.title)}</h1>
+      <p class="sub">${pfEscape(event.event_date)} &middot; ${pfEscape(event.location)}${event.venue ? ` &middot; ${pfEscape(event.venue)}` : ""} &middot; <span class="badge">${pfEscape(event.event_type)}</span></p>
+      ${event.description ? `<p>${pfEscape(event.description)}</p>` : ""}
+      ${myFighter ? (alreadyNominated
+        ? `<form data-form="withdraw" data-event-id="${event.id}"><button class="btn btn-outline btn-small" type="submit">Withdraw nomination</button></form>`
+        : `<form data-form="nominate" data-event-id="${event.id}"><button class="btn btn-gold btn-small" type="submit">Nominate for this fight night</button></form>`) : ""}
+      <h2>Fight card</h2>
+      ${cardHtml}
+      <h2>Nominees (${nominees.length})</h2>
+      <ul>${nomineesHtml}</ul>
+    </section>`);
+}
+
+async function pfViewMatchingPool() {
+  if (!pfRequireLogin()) return;
+  pfSetBody(`<div class="spinner-msg">Loading…</div>`);
+  const fighters = await pfDb.matchingPoolFighters();
+  const rows = fighters.map((f) => `
+    <tr>
+      <td><a href="#/fighters/${f.id}" data-link>${pfEscape(f.full_name)}</a></td>
+      <td>${pfEscape(f.gym_name)}</td>
+      <td>${pfEscape(f.division_label || f.boxer_type)}</td>
+      <td>${f.wins || 0}-${f.losses || 0}-${f.draws || 0}</td>
+      <td>${(f.nominated_events || []).map(pfEscape).join(", ")}</td>
+    </tr>`).join("");
+  pfSetBody(`
+    <section class="section">
+      <h1>Matching Pool</h1>
+      <p class="sub">Every fighter currently nominated to at least one fight night.</p>
+      <table class="data-table"><thead><tr><th>Fighter</th><th>Gym</th><th>Division</th><th>Record</th><th>Nominated for</th></tr></thead>
+      <tbody>${rows || '<tr><td colspan="5" class="fighter-meta">No one in the pool right now.</td></tr>'}</tbody></table>
+    </section>`);
+}
+
+async function pfViewConfirmed() {
+  if (!pfRequireLogin()) return;
+  pfSetBody(`<div class="spinner-msg">Loading…</div>`);
+  const matches = await pfDb.confirmedMatchesAll();
+  const rows = matches.map((m) => `
+    <tr><td>${pfEscape(m.event_title || "TBC")}</td><td>${pfEscape(m.event_date || "")}</td><td>${pfEscape(m.a_name)}</td><td>${pfEscape(m.b_name)}</td><td>${pfEscape(m.agreed_weight || "")}</td></tr>`).join("");
+  pfSetBody(`
+    <section class="section">
+      <h1>Confirmed Matches</h1>
+      <table class="data-table"><thead><tr><th>Event</th><th>Date</th><th>Fighter A</th><th>Fighter B</th><th>Weight</th></tr></thead>
+      <tbody>${rows || '<tr><td colspan="5" class="fighter-meta">No confirmed matches yet.</td></tr>'}</tbody></table>
+      ${pfState.isAdmin ? pfAdminResultForms(matches) : ""}
+    </section>`);
+}
+
+function pfAdminResultForms(matches) {
+  const unrecorded = matches.filter((m) => !m.result_recorded);
+  if (!unrecorded.length) return "";
+  return `<h2>Record results (admin)</h2>` + unrecorded.map((m) => `
+    <form data-form="result" data-match-id="${m.id}" class="card" style="margin-bottom:12px">
+      <p><strong>${pfEscape(m.a_name)}</strong> vs <strong>${pfEscape(m.b_name)}</strong></p>
+      <div class="field"><label>Winner</label>
+        <select name="winner_fighter_id">
+          <option value="draw">Draw</option>
+          <option value="${m.fighter_a_id}">${pfEscape(m.a_name)}</option>
+          <option value="${m.fighter_b_id}">${pfEscape(m.b_name)}</option>
+        </select>
+      </div>
+      <div class="field"><label>Method</label>
+        <select name="method"><option value="Decision">Decision</option><option value="TKO/KO">TKO/KO</option></select>
+      </div>
+      <div class="field"><label>Fighter of the Night</label>
+        <select name="fotn_fighter_id"><option value="">—</option><option value="${m.fighter_a_id}">${pfEscape(m.a_name)}</option><option value="${m.fighter_b_id}">${pfEscape(m.b_name)}</option></select>
+      </div>
+      <button class="btn btn-gold btn-small" type="submit">Record result</button>
+    </form>`).join("");
+}
+
+async function pfViewPoints() {
+  if (!pfRequireLogin()) return;
+  pfSetBody(`<div class="spinner-msg">Loading…</div>`);
+  const leaderboard = await pfDb.leaderboard(PF_SEASON);
+  const rows = leaderboard.map((f, i) => `
+    <tr class="${pfState.fighter && f.id === pfState.fighter.id ? 'badge' : ''}">
+      <td>${i + 1}</td><td><a href="#/fighters/${f.id}" data-link>${pfEscape(f.full_name)}</a></td>
+      <td>${f.fights}</td><td>${f.wins_season}</td><td>${f.fotn_count}</td><td>${f.points}</td>
+    </tr>`).join("");
+  pfSetBody(`
+    <section class="section">
+      <h1>Points &amp; Prizes — ${PF_SEASON} Season</h1>
+      <p class="sub">Scoring: +1 competed, +2 win, +3 extra for a TKO/KO win, +5 Fighter of the Night.</p>
+      <table class="data-table"><thead><tr><th>#</th><th>Fighter</th><th>Fights</th><th>Wins</th><th>FOTN</th><th>Points</th></tr></thead>
+      <tbody>${rows || '<tr><td colspan="6" class="fighter-meta">No points on the board yet.</td></tr>'}</tbody></table>
+    </section>`);
+}
+
+async function pfViewMatchmaking() {
+  if (!pfRequireLogin()) return;
+  if (!pfState.isAdmin) { location.hash = "#/"; return; }
+  pfSetBody(`<div class="spinner-msg">Loading…</div>`);
+  const [pickerFighters, events, matches] = await Promise.all([pfDb.fightersForPicker(), pfDb.events(), pfDb.allMatchesAdmin()]);
+  const fighterOptions = pickerFighters.map((f) => `<option value="${f.id}">${pfEscape(f.full_name)} — ${pfEscape(f.gym_name)} (${pfEscape(f.division_label || f.boxer_type)})</option>`).join("");
+  const eventOptions = events.map((e) => `<option value="${e.id}">${pfEscape(e.title)}</option>`).join("");
+
+  const matchRows = matches.map((m) => {
+    let actions = "";
+    if (m.status === "agreed") {
+      actions = `
+        <form data-form="place" data-match-id="${m.id}" class="inline-form">
+          <select name="event_id" style="width:auto;display:inline-block"><option value="">No event yet</option>${eventOptions}</select>
+          <button class="btn btn-outline btn-small" type="submit">Place</button>
+        </form>
+        <form data-form="confirm" data-match-id="${m.id}" class="inline-form"><button class="btn btn-gold btn-small" type="submit">Confirm</button></form>`;
+    }
+    actions += `<form data-form="cancel-match" data-match-id="${m.id}" class="inline-form"><button class="btn btn-outline btn-small" type="submit">Cancel</button></form>`;
+    return `<tr><td>${pfEscape(m.a_name)}</td><td>${pfEscape(m.b_name)}</td><td>${pfEscape(m.status)}</td><td>${pfEscape(m.event_title || "—")}</td><td>${actions}</td></tr>`;
+  }).join("");
+
+  pfSetBody(`
+    <section class="section">
+      <h1>Matchmaking</h1>
+      <form class="pf-form" data-form="matchmaking">
+        <div class="field"><label>Fighter A</label><select name="fighter_a_id" required><option value="">Select…</option>${fighterOptions}</select></div>
+        <div class="field"><label>Fighter B</label><select name="fighter_b_id" required><option value="">Select…</option>${fighterOptions}</select></div>
+        <div class="field"><label>Fight night (optional)</label><select name="event_id"><option value="">Not yet placed</option>${eventOptions}</select></div>
+        <div class="field"><label>Agreed weight</label><input type="text" name="agreed_weight"></div>
+        <div class="field"><label>Note</label><textarea name="note" rows="2"></textarea></div>
+        <button class="btn btn-gold" type="submit">Send fight offer</button>
+      </form>
+      <h2>Current matches</h2>
+      <table class="data-table"><thead><tr><th>A</th><th>B</th><th>Status</th><th>Event</th><th></th></tr></thead>
+      <tbody>${matchRows || '<tr><td colspan="5" class="fighter-meta">No active matches.</td></tr>'}</tbody></table>
+    </section>`);
+}
+
+// ---------------------------------------------------------------------------
+// Router
+// ---------------------------------------------------------------------------
+const PF_ROUTES = [
+  [/^\/$/, () => pfViewHome()],
+  [/^\/signup$/, () => { if (pfState.user) { location.hash = "#/me"; return; } pfSetBody(pfSignupPage()); }],
+  [/^\/login$/, () => { if (pfState.user) { location.hash = "#/me"; return; } pfSetBody(pfLoginPage()); }],
+  [/^\/me$/, () => { if (!pfRequireLogin()) return; if (!pfState.fighter) { location.hash = "#/register"; return; } location.hash = `#/fighters/${pfState.fighter.id}`; }],
+  [/^\/register$/, () => pfViewRegister()],
+  [/^\/fighters$/, () => pfViewFighterProfiles()],
+  [/^\/fighters\/(\d+)$/, (m) => pfViewFighterProfile(Number(m[1]))],
+  [/^\/events$/, () => pfViewEventsList()],
+  [/^\/events\/new$/, () => pfViewEventForm()],
+  [/^\/events\/(\d+)$/, (m) => pfViewEventDetail(Number(m[1]))],
+  [/^\/matching-pool$/, () => pfViewMatchingPool()],
+  [/^\/confirmed$/, () => pfViewConfirmed()],
+  [/^\/points$/, () => pfViewPoints()],
+  [/^\/matchmaking$/, () => pfViewMatchmaking()],
+];
+
+function pfRoute() {
+  const path = location.hash.replace(/^#/, "") || "/";
+  for (const [pattern, handler] of PF_ROUTES) {
+    const m = path.match(pattern);
+    if (m) { handler(m); pfRenderNav(); return; }
+  }
+  pfSetBody(`<div class="empty-state"><h2>Page not found</h2><a href="#/" data-link>Back home</a></div>`);
+}
+
+window.addEventListener("hashchange", pfRoute);
+
+// ---------------------------------------------------------------------------
+// Event delegation: forms + data-action buttons
+// ---------------------------------------------------------------------------
+function pfFormError(form, message) {
+  let el = form.querySelector(".flash");
+  if (!el) { el = document.createElement("div"); el.className = "flash flash-error"; form.prepend(el); }
+  el.textContent = message;
+}
+
+document.addEventListener("submit", async (e) => {
+  const form = e.target.closest("form[data-form]");
+  if (!form) return;
+  e.preventDefault();
+  const kind = form.getAttribute("data-form");
+  const fd = new FormData(form);
+  const submitBtn = form.querySelector('button[type="submit"]');
+  const originalLabel = submitBtn ? submitBtn.textContent : "";
+  if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = "Please wait…"; }
+
+  try {
+    if (kind === "signup") {
+      const email = String(fd.get("email") || "").trim().toLowerCase();
+      const password = String(fd.get("password") || "");
+      const password2 = String(fd.get("password2") || "");
+      if (password !== password2) throw new Error("Passwords do not match.");
+      const { error } = await pfSupabase.auth.signUp({ email, password });
+      if (error) throw error;
+      location.hash = "#/register";
+    } else if (kind === "login") {
+      const email = String(fd.get("email") || "").trim().toLowerCase();
+      const password = String(fd.get("password") || "");
+      const { error } = await pfSupabase.auth.signInWithPassword({ email, password });
+      if (error) throw new Error("Incorrect email or password.");
+      location.hash = "#/me";
+    } else if (kind === "register") {
+      const record = {
+        full_name: String(fd.get("full_name") || "").trim(),
+        gym_name: String(fd.get("gym_name") || "").trim(),
+        coach_name: String(fd.get("coach_name") || "").trim(),
+        gym_town: String(fd.get("gym_town") || "").trim(),
+        gym_postcode: String(fd.get("gym_postcode") || "").trim(),
+        boxer_type: String(fd.get("boxer_type") || "amateur"),
+        weight_division_id: Number(fd.get("weight_division_id")),
+        wins: Number(fd.get("wins")) || 0,
+        losses: Number(fd.get("losses")) || 0,
+        draws: Number(fd.get("draws")) || 0,
+        exhibition_bouts: 0,
+        ko_tko_wins: Number(fd.get("ko_tko_wins")) || 0,
+        has_title: fd.get("has_title") === "yes",
+        title_level: fd.get("has_title") === "yes" ? fd.get("title_level") : null,
+        title_region: null,
+        title_current: fd.get("has_title") === "yes" && fd.get("title_current") === "current",
+        availability: fd.get("availability") || "open",
+      };
+      if (!/^\d{4}$/.test(record.gym_postcode)) throw new Error("Gym postcode must be a 4-digit number.");
+      const existingId = form.getAttribute("data-fighter-id");
+      const photoFile = fd.get("photo");
+      let fighterId;
+      if (existingId) {
+        fighterId = Number(existingId);
+        await pfDb.updateFighter(fighterId, record);
+      } else {
+        fighterId = await pfDb.createFighter(pfState.user.id, record);
+      }
+      if (photoFile && photoFile.size > 0) {
+        if (!PF_ALLOWED_PHOTO_TYPES.has(photoFile.type)) throw new Error("Photo must be a JPEG, PNG or WEBP image.");
+        const url = await pfSaveFighterPhoto(fighterId, photoFile);
+        await pfDb.setFighterPhoto(fighterId, url);
+      }
+      await pfRefreshSession();
+      location.hash = `#/fighters/${fighterId}`;
+    } else if (kind === "event") {
+      const title = String(fd.get("title") || "").trim();
+      const eventType = String(fd.get("event_type") || "");
+      if (!PF_EVENT_TYPES.includes(eventType)) throw new Error("Please choose a valid night type.");
+      const photoFile = fd.get("photo");
+      if (!photoFile || photoFile.size === 0) throw new Error("Please upload a photo or poster for the event.");
+      if (!PF_ALLOWED_PHOTO_TYPES.has(photoFile.type)) throw new Error("Event photo must be a JPEG, PNG or WEBP image.");
+      const eventId = await pfDb.createEvent({
+        title, location: String(fd.get("location") || "").trim(), venue: String(fd.get("venue") || "").trim() || null,
+        event_date: String(fd.get("event_date") || ""), event_type: eventType,
+        description: String(fd.get("description") || "").trim() || null, created_by: pfState.user.id,
+      });
+      const url = await pfSaveEventPhoto(eventId, photoFile);
+      await pfDb.setEventPhoto(eventId, url);
+      location.hash = `#/events/${eventId}`;
+    } else if (kind === "nominate") {
+      if (!pfState.fighter) throw new Error("Register a fighter profile first.");
+      await pfDb.nominate(Number(form.getAttribute("data-event-id")), pfState.fighter.id);
+      location.hash = "#/matching-pool";
+    } else if (kind === "withdraw") {
+      if (pfState.fighter) await pfDb.withdrawNomination(Number(form.getAttribute("data-event-id")), pfState.fighter.id);
+      pfRoute();
+    } else if (kind === "matchmaking") {
+      const aId = Number(fd.get("fighter_a_id")), bId = Number(fd.get("fighter_b_id"));
+      if (!aId || !bId) throw new Error("Please pick two valid fighters.");
+      if (aId === bId) throw new Error("A fighter can't be matched against themselves.");
+      await pfDb.createMatch({
+        fighter_a_id: aId, fighter_b_id: bId,
+        event_id: fd.get("event_id") ? Number(fd.get("event_id")) : null,
+        agreed_weight: String(fd.get("agreed_weight") || "").trim(), note: String(fd.get("note") || "").trim(),
+      });
+      pfRoute();
+    } else if (kind === "place") {
+      await pfDb.placeMatchOnEvent(Number(form.getAttribute("data-match-id")), fd.get("event_id") ? Number(fd.get("event_id")) : null);
+      pfRoute();
+    } else if (kind === "confirm") {
+      await pfDb.confirmMatch(Number(form.getAttribute("data-match-id")));
+      pfRoute();
+    } else if (kind === "cancel-match") {
+      await pfDb.cancelMatch(Number(form.getAttribute("data-match-id")));
+      pfRoute();
+    } else if (kind === "result") {
+      const winnerRaw = String(fd.get("winner_fighter_id") || "");
+      await pfDb.recordMatchResult({
+        matchId: Number(form.getAttribute("data-match-id")),
+        winnerFighterId: winnerRaw === "draw" || winnerRaw === "" ? null : Number(winnerRaw),
+        method: String(fd.get("method") || "Decision"),
+        fotnFighterId: fd.get("fotn_fighter_id") ? Number(fd.get("fotn_fighter_id")) : null,
+      });
+      pfRoute();
+    }
+  } catch (err) {
+    console.error(err);
+    pfFormError(form, err.message || "Something went wrong. Please try again.");
+    if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = originalLabel; }
+  }
+});
+
+document.addEventListener("click", async (e) => {
+  const link = e.target.closest("[data-link]");
+  if (link) {
+    // Native hash navigation via href="#/..." already works; nothing extra needed.
+    return;
+  }
+  const actionBtn = e.target.closest("[data-action]");
+  if (!actionBtn) return;
+  const action = actionBtn.getAttribute("data-action");
+  if (action === "logout") {
+    await pfSupabase.auth.signOut();
+    location.hash = "#/";
+    return;
+  }
+  if (action === "respond-match") {
+    actionBtn.disabled = true;
+    try {
+      await pfDb.respondToMatch(Number(actionBtn.getAttribute("data-match-id")), actionBtn.getAttribute("data-response"));
+      pfRoute();
+    } catch (err) {
+      console.error(err);
+      alert(err.message || "Could not respond to that offer.");
+      actionBtn.disabled = false;
+    }
+  }
+});
+
+// ---------------------------------------------------------------------------
+// Boot
+// ---------------------------------------------------------------------------
+(async function pfBoot() {
+  await pfRefreshSession();
+  pfState.ready = true;
+  pfRenderNav();
+  pfRoute();
+})();
+</script>
+</body>
+</html>
