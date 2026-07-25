@@ -269,7 +269,7 @@ const pfDb = {
     return data || null;
   },
   async allFighters() {
-    const { data, error } = await pfSupabase.from("pf_fighters_flat").select("*").order("created_at", { ascending: false });
+    const { data, error } = await pfSupabase.from("pf_fighters_flat").select("*").order("updated_at", { ascending: false });
     if (error) throw error;
     return data;
   },
