@@ -147,6 +147,51 @@ body{padding-bottom:78px}
 .profile-grid .roster-photo{width:100%;height:auto;aspect-ratio:1}
 .profile-grid .roster-stats{grid-template-columns:repeat(auto-fit,minmax(72px,1fr))}
 @media (max-width:560px){.profile-grid{grid-template-columns:1fr}.profile-grid .roster-photo{width:120px;height:120px;margin:0 auto}.profile-grid .challenger-badge{display:block;width:fit-content;margin-left:auto;margin-right:auto}}
+
+/* --- V2: roster filters + availability badge --- */
+.roster-filters{display:flex;flex-wrap:wrap;gap:10px;margin:18px 0 22px;align-items:center}
+.roster-filters select,.roster-filters input[type="text"]{background:#141414;border:1px solid #2a2a2a;color:var(--cream);border-radius:6px;padding:9px 12px;font:inherit;font-size:0.88rem}
+.roster-filters input[type="text"]{flex:1 1 180px}
+.roster-filters label.check{display:flex;align-items:center;gap:6px;color:var(--grey);font-size:0.85rem;white-space:nowrap}
+.roster-count{color:var(--grey);font-size:0.85rem;margin:-8px 0 18px}
+.avail-badge{display:inline-block;font-size:0.6rem;text-transform:uppercase;letter-spacing:.04em;border-radius:100px;padding:2px 9px;margin-left:8px;vertical-align:middle;font-weight:700}
+.avail-open{background:rgba(201,162,39,.18);color:var(--gold-bright);border:1px solid var(--gold-dark)}
+.avail-selective{background:rgba(169,164,154,.1);color:var(--grey);border:1px solid #333}
+.avail-unavailable{background:rgba(169,164,154,.05);color:#6b6b6b;border:1px solid #262626}
+.roster-card.is-hidden{display:none}
+
+/* --- V2: AI match suggestions --- */
+.suggestion-list{display:flex;flex-direction:column;gap:12px;margin:16px 0 30px}
+.suggestion-card{border:1px solid #2a2a2a;border-radius:10px;background:var(--panel);padding:16px 18px;display:flex;flex-wrap:wrap;align-items:center;gap:16px}
+.suggestion-score{display:flex;flex-direction:column;align-items:center;min-width:56px;flex:0 0 auto}
+.suggestion-score .val{font-family:'Oswald',sans-serif;font-size:1.5rem;color:var(--gold-bright);line-height:1}
+.suggestion-score .lbl{font-size:0.6rem;text-transform:uppercase;color:var(--grey);letter-spacing:.05em}
+.suggestion-body{flex:1 1 260px}
+.suggestion-pair{font-family:'Oswald',sans-serif;font-size:1.05rem;color:var(--cream);margin-bottom:4px}
+.suggestion-vs{color:var(--grey);font-weight:400;font-size:0.85rem;margin:0 8px;font-family:'Inter',sans-serif}
+.suggestion-reasons{color:var(--grey);font-size:0.8rem;line-height:1.6}
+.suggestion-flag{color:#e0a63a;font-weight:600}
+.suggestion-empty{color:var(--grey);font-size:0.9rem}
+
+/* --- V2: home dashboard strip --- */
+.home-strip{display:flex;flex-direction:column;gap:14px;margin:22px 0 26px}
+.home-card{border:1px solid #2a2a2a;border-radius:10px;background:var(--panel);padding:16px 18px}
+.home-card h3{margin:0 0 8px;font-family:'Oswald',sans-serif;font-size:0.92rem;color:var(--gold-bright);text-transform:uppercase;letter-spacing:.04em}
+.countdown-row{display:flex;align-items:baseline;gap:10px}
+.countdown-num{font-family:'Oswald',sans-serif;font-size:2.4rem;color:var(--gold-bright);line-height:1}
+.feed-item{border-top:1px solid #222;padding:8px 0;font-size:0.86rem;color:var(--grey)}
+.feed-item:first-child{border-top:none;padding-top:0}
+.feed-item strong{color:var(--cream)}
+
+/* --- V2: 10-week camp journey --- */
+.camp-panel{border:2px solid var(--gold-dark);border-radius:16px;background:radial-gradient(ellipse at top, #1c1c1c 0%, #0d0d0d 72%);padding:22px 20px;margin-bottom:24px}
+.camp-panel h2{margin-top:0}
+.camp-weeks{display:flex;gap:6px;flex-wrap:wrap;margin:16px 0}
+.camp-week-dot{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.68rem;font-weight:700;border:2px solid #2a2a2a;color:var(--grey);flex:0 0 auto}
+.camp-week-dot.done{background:var(--gold);border-color:var(--gold);color:#0a0a0a}
+.camp-week-dot.current{border-color:var(--gold-bright);color:var(--gold-bright);box-shadow:0 0 0 3px rgba(232,198,95,.15)}
+.camp-note{color:var(--grey);font-size:0.9rem;margin-top:12px;line-height:1.6}
+.camp-note strong{color:var(--cream)}
 </style>
 </head>
 <body>
@@ -275,7 +320,7 @@ const pfDb = {
   },
   async fightersForPicker() {
     const { data, error } = await pfSupabase.from("pf_fighters_flat")
-      .select("id, full_name, gym_name, boxer_type, wins, losses, draws, availability, division_label, division_name, division_type, division_sort")
+      .select("id, full_name, gym_name, boxer_type, wins, losses, draws, exhibition_bouts, weight_division_id, availability, division_label, division_name, division_type, division_sort")
       .order("division_type").order("division_sort").order("full_name");
     if (error) throw error;
     return data;
@@ -456,6 +501,11 @@ const pfDb = {
     const { data } = await pfSupabase.from("pf_results").select("points").eq("fighter_id", fighterId).eq("season", season || PF_SEASON);
     return (data || []).reduce((sum, r) => sum + r.points, 0);
   },
+  async resultsForFighter(fighterId, limit = 3) {
+    const { data, error } = await pfSupabase.from("pf_results").select("*").eq("fighter_id", fighterId).order("created_at", { ascending: false }).limit(limit);
+    if (error) throw error;
+    return data;
+  },
   async countFighters() {
     const { count } = await pfSupabase.from("pf_fighters").select("*", { count: "exact", head: true });
     return count || 0;
@@ -527,6 +577,60 @@ function pfBuildBio(fighter, division) {
     bits.push(`${status === "current" ? "Currently holds" : "Formerly held"} a ${pfEscape(fighter.title_level)}${region} title.`);
   }
   return bits.join(" ");
+}
+
+// ---------------------------------------------------------------------------
+// V2: AI-assisted matchmaking suggestions
+// Pure client-side scoring over data already loaded for the Matches tab — no
+// new tables, no external AI service. Deterministic and explainable on
+// purpose: every score comes with the plain-English reasons behind it, and
+// the admin can still ignore all of it and use the manual picker below.
+// ---------------------------------------------------------------------------
+function pfBuildMatchSuggestions(fighters, matches, limit = 8) {
+  const paired = new Set();
+  for (const m of matches) {
+    const a = m.fighter_a_id, b = m.fighter_b_id;
+    if (a && b) paired.add(a < b ? `${a}-${b}` : `${b}-${a}`);
+  }
+  const pool = fighters.filter((f) => f.availability !== "unavailable" && f.weight_division_id != null);
+  const byDivision = new Map();
+  for (const f of pool) {
+    const key = f.weight_division_id;
+    if (!byDivision.has(key)) byDivision.set(key, []);
+    byDivision.get(key).push(f);
+  }
+  const suggestions = [];
+  for (const group of byDivision.values()) {
+    for (let i = 0; i < group.length; i++) {
+      for (let j = i + 1; j < group.length; j++) {
+        const a = group[i], b = group[j];
+        const key = a.id < b.id ? `${a.id}-${b.id}` : `${b.id}-${a.id}`;
+        if (paired.has(key)) continue;
+        const totalA = (a.wins || 0) + (a.losses || 0) + (a.draws || 0) + (a.exhibition_bouts || 0);
+        const totalB = (b.wins || 0) + (b.losses || 0) + (b.draws || 0) + (b.exhibition_bouts || 0);
+        const expGap = Math.abs(totalA - totalB);
+        const winGap = Math.abs((a.wins || 0) - (b.wins || 0));
+        const sameGym = a.gym_name && b.gym_name && a.gym_name.trim().toLowerCase() === b.gym_name.trim().toLowerCase();
+        const bothOpen = a.availability === "open" && b.availability === "open";
+        let score = 100 - expGap * 8 - winGap * 10;
+        if (sameGym) score -= 15;
+        score += bothOpen ? 10 : -5;
+        score = Math.max(0, Math.min(100, Math.round(score)));
+
+        const reasons = [
+          `Same division (${a.division_label || "—"})`,
+          expGap === 0 ? "Identical experience" : `Experience gap: ${expGap} bout${expGap === 1 ? "" : "s"}`,
+          winGap === 0 ? "Identical win record" : `Win gap: ${winGap}`,
+          bothOpen ? "Both open to fight" : "At least one fighter is selective",
+        ];
+        const flags = [];
+        if (sameGym) flags.push(`Same gym (${a.gym_name}) — check sparring history before pairing`);
+        suggestions.push({ a, b, score, reasons, flags });
+      }
+    }
+  }
+  suggestions.sort((x, y) => y.score - x.score);
+  return suggestions.slice(0, limit);
 }
 
 // ---------------------------------------------------------------------------
@@ -650,16 +754,86 @@ async function pfViewHome() {
   }
   if (!pfState.fighter) { location.hash = "#/register"; return; }
   pfSetBody(`<div class="spinner-msg">Loading your dashboard…</div>`);
-  const [fighterCount, eventCount, offers, bouts] = await Promise.all([
+  const [fighterCount, eventCount, offers, bouts, results] = await Promise.all([
     pfDb.countFighters(), pfDb.countEvents(),
     pfDb.pendingOffersForFighter(pfState.fighter.id), pfDb.boutsForFighter(pfState.fighter.id),
+    pfDb.resultsForFighter(pfState.fighter.id, 3),
   ]);
+  const today = new Date();
+
+  let adminSnapshot = null;
+  if (pfState.isAdmin) {
+    const [allMatches, allEvents] = await Promise.all([pfDb.allMatchesAdmin(), pfDb.events()]);
+    const pendingCount = allMatches.filter((m) => m.status === "proposed" && (m.a_response === "pending" || m.b_response === "pending")).length;
+    const cardedEventIds = new Set(allMatches.filter((m) => m.status === "confirmed" && m.event_id).map((m) => m.event_id));
+    const eventsNeedingCard = allEvents.filter((e) => {
+      const d = new Date(e.event_date);
+      return !isNaN(d) && d >= today && !cardedEventIds.has(e.id);
+    });
+    adminSnapshot = { pendingCount, eventsNeedingCard };
+  }
 
   const boutsHtml = bouts.length ? bouts.map((b) => {
     const isA = b.fighter_a_id === pfState.fighter.id;
     const opponent = isA ? b.b_name : b.a_name;
     return `<div class="offer-card"><p><strong>${b.status === "confirmed" ? "Confirmed bout" : "Agreed — awaiting event"}</strong> vs ${pfEscape(opponent)}${b.event_title ? ` &middot; ${pfEscape(b.event_title)}` : ""}</p></div>`;
   }).join("") : `<p class="fighter-meta">No upcoming bouts yet.</p>`;
+
+  // Phase 3: countdown to the nearest upcoming confirmed fight night
+  const upcomingConfirmed = bouts
+    .filter((b) => b.status === "confirmed" && b.event_date)
+    .map((b) => ({ ...b, _d: new Date(b.event_date) }))
+    .filter((b) => !isNaN(b._d) && b._d >= today)
+    .sort((a, b) => a._d - b._d);
+  const nextBout = upcomingConfirmed[0] || null;
+  const daysUntil = nextBout ? Math.max(0, Math.ceil((nextBout._d - today) / 86400000)) : null;
+
+  // Phase 3: "what's new" activity feed — most actionable items first
+  const feedItems = [];
+  offers.forEach((o) => {
+    const isA = o.fighter_a_id === pfState.fighter.id;
+    const opp = isA ? o.b_name : o.a_name;
+    feedItems.push(`<strong>New fight offer</strong> vs ${pfEscape(opp)} — respond on the <a href="#/offers" data-link>Nominations tab</a>.`);
+  });
+  bouts.forEach((b) => {
+    const isA = b.fighter_a_id === pfState.fighter.id;
+    const opp = isA ? b.b_name : b.a_name;
+    feedItems.push(`<strong>${b.status === "confirmed" ? "Confirmed bout" : "Agreed — awaiting fight night"}</strong> vs ${pfEscape(opp)}${b.event_title ? ` &middot; ${pfEscape(b.event_title)}` : ""}`);
+  });
+  results.forEach((r) => {
+    const label = r.outcome === "win" ? "Win" : r.outcome === "loss" ? "Loss" : "Draw";
+    feedItems.push(`<strong>${label}</strong>${r.method ? ` by ${pfEscape(r.method)}` : ""} &middot; +${r.points} pts${r.fighter_of_night ? " &middot; Fighter of the Night" : ""}`);
+  });
+
+  const homeStripCards = [];
+  if (nextBout) {
+    homeStripCards.push(`
+      <div class="home-card">
+        <h3>Fight Night Countdown</h3>
+        <div class="countdown-row"><span class="countdown-num">${daysUntil}</span><span class="fighter-meta" style="margin:0">day${daysUntil === 1 ? "" : "s"} until your bout${nextBout.event_title ? ` at ${pfEscape(nextBout.event_title)}` : ""}</span></div>
+      </div>`);
+  }
+  if (pfState.fighter.availability !== "open" && !upcomingConfirmed.length) {
+    homeStripCards.push(`
+      <div class="home-card">
+        <h3>Get Matched Faster</h3>
+        <p class="fighter-meta" style="margin:0">Your availability is set to "${pfEscape(pfAvailLabel(pfState.fighter.availability))}". Switch to <strong>Open to fight</strong> to show up in more AI match suggestions.</p>
+        <a href="#/register" data-link class="btn btn-outline btn-small" style="margin-top:10px">Update availability</a>
+      </div>`);
+  }
+  homeStripCards.push(`
+    <div class="home-card">
+      <h3>What's New</h3>
+      ${feedItems.length ? feedItems.slice(0, 6).map((i) => `<div class="feed-item">${i}</div>`).join("") : `<div class="feed-item">Nothing new yet — check back after your next fight offer or result.</div>`}
+    </div>`);
+  if (adminSnapshot) {
+    homeStripCards.push(`
+      <div class="home-card">
+        <h3>Admin Snapshot</h3>
+        <div class="feed-item">${adminSnapshot.pendingCount} fight offer${adminSnapshot.pendingCount === 1 ? "" : "s"} awaiting a fighter's response.</div>
+        <div class="feed-item">${adminSnapshot.eventsNeedingCard.length ? `${adminSnapshot.eventsNeedingCard.length} upcoming event${adminSnapshot.eventsNeedingCard.length === 1 ? "" : "s"} with no confirmed fight card yet: ${adminSnapshot.eventsNeedingCard.map((e) => pfEscape(e.title)).join(", ")}` : "Every upcoming event has at least one confirmed fight."}</div>
+      </div>`);
+  }
 
   pfSetBody(`
     <section class="section">
@@ -671,6 +845,7 @@ async function pfViewHome() {
         <div class="stat-box"><span class="num">${eventCount}</span><span class="lbl">Fight Nights</span></div>
       </div>
       ${offers.length ? `<div class="flash flash-success"><strong>${offers.length}</strong> pending fight offer${offers.length === 1 ? "" : "s"} waiting on you &mdash; <a href="#/offers" data-link>respond on the Offers tab</a>.</div>` : ""}
+      <div class="home-strip">${homeStripCards.join("")}</div>
       <h2>Your bouts</h2>
       ${boutsHtml}
       ${pfState.isAdmin ? `<h2>Admin</h2><div class="stat-row"><a href="#/matchmaking" data-link class="btn btn-outline btn-small">Matchmaking</a><a href="#/events/new" data-link class="btn btn-outline btn-small">Create fight night</a></div>` : ""}
@@ -794,6 +969,61 @@ async function pfViewRegister(prefill = {}, error = "") {
   }));
 }
 
+// ---------------------------------------------------------------------------
+// V2: 10-week camp journey (Phase 4, v1 — countdown + milestones only; no
+// persisted check-ins yet, so nothing here needs a schema change).
+// ---------------------------------------------------------------------------
+const PF_CAMP_LENGTH_DAYS = 70;
+const PF_CAMP_MILESTONES = [
+  "Camp's underway — lock in your training schedule for the next 10 weeks.",
+  "Build your base: focus on conditioning and technique fundamentals.",
+  "Start lining up sparring rounds with your coach.",
+  "Just past the quarter mark — check in with your coach on how camp's tracking.",
+  "Midpoint. Be honest with yourself about what's working and adjust.",
+  "Sharpen your gameplan for likely opponents in your division.",
+  "Peak training block — usually the hardest week of camp.",
+  "Begin tapering intensity while keeping your technique sharp.",
+  "Fine-tune, prioritise recovery, and finalise fight night logistics.",
+  "Fight week. Trust your camp, arrive early, and enjoy it.",
+];
+
+function pfCampWeekInfo(eventDateStr) {
+  const eventDate = new Date(eventDateStr);
+  if (isNaN(eventDate)) return null;
+  const today = new Date();
+  const msPerDay = 86400000;
+  const daysRemaining = Math.ceil((eventDate - today) / msPerDay);
+  if (daysRemaining < 0) return null;
+  const daysIntoCamp = PF_CAMP_LENGTH_DAYS - daysRemaining;
+  if (daysIntoCamp < 0) return { daysRemaining, started: false };
+  const currentWeek = Math.min(10, Math.max(1, Math.ceil((daysIntoCamp || 1) / 7)));
+  return { daysRemaining, started: true, currentWeek };
+}
+
+function pfCampPanel(nextConfirmedBout) {
+  if (!nextConfirmedBout) return "";
+  const info = pfCampWeekInfo(nextConfirmedBout.event_date);
+  if (!info) return "";
+  if (!info.started) {
+    return `
+    <div class="camp-panel">
+      <h2>10-Week Camp Journey</h2>
+      <p class="fighter-meta">Your camp for <strong>${pfEscape(nextConfirmedBout.event_title || "your next fight night")}</strong> kicks off in ${info.daysRemaining - PF_CAMP_LENGTH_DAYS} day${info.daysRemaining - PF_CAMP_LENGTH_DAYS === 1 ? "" : "s"}, 10 weeks out from fight night.</p>
+    </div>`;
+  }
+  const dots = Array.from({ length: 10 }, (_, i) => i + 1).map((w) => {
+    const cls = w < info.currentWeek ? "done" : w === info.currentWeek ? "current" : "";
+    return `<span class="camp-week-dot ${cls}">${w}</span>`;
+  }).join("");
+  return `
+    <div class="camp-panel">
+      <h2>10-Week Camp Journey</h2>
+      <p class="fighter-meta" style="margin:0">Week ${info.currentWeek} of 10 &middot; ${info.daysRemaining} day${info.daysRemaining === 1 ? "" : "s"} until ${pfEscape(nextConfirmedBout.event_title || "fight night")}</p>
+      <div class="camp-weeks">${dots}</div>
+      <p class="camp-note"><strong>This week:</strong> ${pfEscape(PF_CAMP_MILESTONES[info.currentWeek - 1])}</p>
+    </div>`;
+}
+
 async function pfViewFighterProfile(id) {
   if (!pfRequireLogin()) return;
   pfSetBody(`<div class="spinner-msg">Loading fighter…</div>`);
@@ -810,15 +1040,23 @@ async function pfViewFighterProfile(id) {
     return `<tr><td>${pfEscape(opponent)}</td><td>${pfEscape(b.status)}</td><td>${pfEscape(b.event_title || "TBC")}</td></tr>`;
   }).join("")}</tbody></table>` : `<p class="fighter-meta">No bouts yet.</p>`;
 
+  const today = new Date();
+  const nextConfirmedBout = bouts
+    .filter((b) => b.status === "confirmed" && b.event_date && !isNaN(new Date(b.event_date)) && new Date(b.event_date) >= today)
+    .sort((a, b) => new Date(a.event_date) - new Date(b.event_date))[0] || null;
+  const campHtml = isOwner ? pfCampPanel(nextConfirmedBout) : "";
+
   const challenger = fighter.boxer_type === "professional" ? "Pro" : "Amateur";
   pfSetBody(`
     <section class="section">
       <a href="#/fighters" data-link class="back-link">&larr; Fighters</a>
+      ${campHtml}
       <div class="profile-frame">
         <div class="profile-grid">
           <img class="roster-photo" src="${fighter.photo_path ? pfEscape(fighter.photo_path) : '/fighter-placeholder.svg'}">
           <div>
             <span class="challenger-badge">Fight Club Challenger &mdash; ${challenger}</span>
+            <span class="avail-badge avail-${pfEscape(fighter.availability || "open")}">${pfAvailLabel(fighter.availability)}</span>
             <h1 style="margin-top:0">${pfEscape(fighter.full_name)}${fighter.has_title ? ` <span class="badge">${pfEscape(fighter.title_level)} title</span>` : ""}</h1>
             <p class="sub" style="margin-bottom:12px">${pfEscape(fighter.division_label || "")}</p>
             <div class="roster-stats">
@@ -839,18 +1077,29 @@ async function pfViewFighterProfile(id) {
     </section>`);
 }
 
+function pfAvailLabel(a) {
+  if (a === "selective") return "Selective";
+  if (a === "unavailable") return "Unavailable";
+  return "Open to fight";
+}
+
 async function pfViewFighterProfiles() {
   if (!pfRequireLogin()) return;
   pfSetBody(`<div class="spinner-msg">Loading roster…</div>`);
   const fighters = await pfDb.allFighters();
+  const divisions = [...new Set(fighters.map((f) => f.division_label).filter(Boolean))].sort();
+  const divisionOptions = divisions.map((d) => `<option value="${pfEscape(d)}">${pfEscape(d)}</option>`).join("");
   const cards = fighters.map((f) => {
     const challenger = f.boxer_type === "professional" ? "Pro" : "Amateur";
+    const availability = f.availability || "open";
+    const searchBlob = `${f.full_name || ""} ${f.gym_name || ""}`.toLowerCase();
     return `
-    <a href="#/fighters/${f.id}" data-link class="roster-card">
+    <a href="#/fighters/${f.id}" data-link class="roster-card" data-search="${pfEscape(searchBlob)}" data-division="${pfEscape(f.division_label || "")}" data-type="${pfEscape(f.boxer_type || "")}" data-availability="${pfEscape(availability)}">
       <div class="roster-card-top">
         <img class="roster-photo" src="${f.photo_path ? pfEscape(f.photo_path) : '/fighter-placeholder.svg'}" alt="${pfEscape(f.full_name)}">
         <div>
           <span class="challenger-badge">Fight Club Challenger &mdash; ${challenger}</span>
+          <span class="avail-badge avail-${pfEscape(availability)}">${pfAvailLabel(availability)}</span>
           <p class="roster-name">${pfEscape(f.full_name)}</p>
           <p class="roster-division">${pfEscape(f.division_label || "")}</p>
         </div>
@@ -867,9 +1116,40 @@ async function pfViewFighterProfiles() {
   pfSetBody(`
     <section class="section">
       <h1>Fighters</h1>
-      <p class="sub">${fighters.length} registered fighters</p>
+      <div class="roster-filters">
+        <input type="text" id="pf-roster-search" placeholder="Search name or gym…">
+        <select id="pf-roster-division"><option value="">All divisions</option>${divisionOptions}</select>
+        <select id="pf-roster-type"><option value="">Amateur &amp; Pro</option><option value="amateur">Amateur</option><option value="professional">Professional</option></select>
+        <label class="check"><input type="checkbox" id="pf-roster-open-only"> Open to matches only</label>
+      </div>
+      <p class="roster-count" id="pf-roster-count">${fighters.length} registered fighters</p>
       <div class="roster-list">${cards || '<p class="empty-state">No fighters registered yet.</p>'}</div>
     </section>`);
+
+  function applyRosterFilters() {
+    const search = (document.getElementById("pf-roster-search")?.value || "").trim().toLowerCase();
+    const division = document.getElementById("pf-roster-division")?.value || "";
+    const type = document.getElementById("pf-roster-type")?.value || "";
+    const openOnly = document.getElementById("pf-roster-open-only")?.checked;
+    const cards = document.querySelectorAll(".roster-list .roster-card");
+    let visible = 0;
+    cards.forEach((card) => {
+      const show = (!search || card.dataset.search.includes(search))
+        && (!division || card.dataset.division === division)
+        && (!type || card.dataset.type === type)
+        && (!openOnly || card.dataset.availability === "open");
+      card.classList.toggle("is-hidden", !show);
+      if (show) visible++;
+    });
+    const countEl = document.getElementById("pf-roster-count");
+    if (countEl) countEl.textContent = cards.length ? `${visible} of ${cards.length} fighters shown` : "0 registered fighters";
+  }
+  ["pf-roster-search", "pf-roster-division", "pf-roster-type"].forEach((id) => {
+    const el = document.getElementById(id);
+    el?.addEventListener("input", applyRosterFilters);
+    el?.addEventListener("change", applyRosterFilters);
+  });
+  document.getElementById("pf-roster-open-only")?.addEventListener("change", applyRosterFilters);
 }
 
 async function pfViewEventsList() {
@@ -1051,6 +1331,17 @@ async function pfViewMatchmaking() {
   const [pickerFighters, events, matches] = await Promise.all([pfDb.fightersForPicker(), pfDb.events(), pfDb.allMatchesAdmin()]);
   const fighterOptions = pickerFighters.map((f) => `<option value="${f.id}">${pfEscape(f.full_name)} — ${pfEscape(f.gym_name)} (${pfEscape(f.division_label || f.boxer_type)})</option>`).join("");
   const eventOptions = events.map((e) => `<option value="${e.id}">${pfEscape(e.title)}</option>`).join("");
+  const suggestions = pfBuildMatchSuggestions(pickerFighters, matches);
+  const suggestionsHtml = suggestions.length ? suggestions.map((s) => `
+    <div class="suggestion-card">
+      <div class="suggestion-score"><span class="val">${s.score}</span><span class="lbl">Match</span></div>
+      <div class="suggestion-body">
+        <div class="suggestion-pair">${pfEscape(s.a.full_name)}<span class="suggestion-vs">vs</span>${pfEscape(s.b.full_name)}</div>
+        <div class="suggestion-reasons">${s.reasons.map(pfEscape).join(" &middot; ")}</div>
+        ${s.flags.map((f) => `<div class="suggestion-flag">&#9888; ${pfEscape(f)}</div>`).join("")}
+      </div>
+      <button type="button" class="btn btn-outline btn-small" data-action="use-suggestion" data-a-id="${s.a.id}" data-b-id="${s.b.id}">Use this pairing</button>
+    </div>`).join("") : `<p class="suggestion-empty">No strong pairings available right now — either every open fighter in a shared division already has an active match, or there's only one fighter per division. Mark more fighters "open to fight" on their profiles to see suggestions here.</p>`;
 
   const matchRows = matches.map((m) => {
     let actions = "";
@@ -1069,9 +1360,13 @@ async function pfViewMatchmaking() {
   pfSetBody(`
     <section class="section">
       <h1>Matchmaking</h1>
+      <h2>AI Match Suggestions</h2>
+      <p class="sub">Ranked by record and experience closeness across fighters marked open or selective. Reasoning shown for every suggestion — nothing here is sent automatically.</p>
+      <div class="suggestion-list">${suggestionsHtml}</div>
+      <h2 id="pf-manual-offer">Send a fight offer</h2>
       <form class="pf-form" data-form="matchmaking">
-        <div class="field"><label>Fighter A</label><select name="fighter_a_id" required><option value="">Select…</option>${fighterOptions}</select></div>
-        <div class="field"><label>Fighter B</label><select name="fighter_b_id" required><option value="">Select…</option>${fighterOptions}</select></div>
+        <div class="field"><label>Fighter A</label><select id="pf-fighter-a-select" name="fighter_a_id" required><option value="">Select…</option>${fighterOptions}</select></div>
+        <div class="field"><label>Fighter B</label><select id="pf-fighter-b-select" name="fighter_b_id" required><option value="">Select…</option>${fighterOptions}</select></div>
         <div class="field"><label>Fight night (optional)</label><select name="event_id"><option value="">Not yet placed</option>${eventOptions}</select></div>
         <div class="field"><label>Agreed weight</label><input type="text" name="agreed_weight"></div>
         <div class="field"><label>Note</label><textarea name="note" rows="2"></textarea></div>
@@ -1291,6 +1586,15 @@ document.addEventListener("click", async (e) => {
       alert(err.message || "Could not respond to that offer.");
       actionBtn.disabled = false;
     }
+    return;
+  }
+  if (action === "use-suggestion") {
+    const aSel = document.getElementById("pf-fighter-a-select");
+    const bSel = document.getElementById("pf-fighter-b-select");
+    if (aSel) aSel.value = actionBtn.getAttribute("data-a-id");
+    if (bSel) bSel.value = actionBtn.getAttribute("data-b-id");
+    document.getElementById("pf-manual-offer")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    return;
   }
 });
 
