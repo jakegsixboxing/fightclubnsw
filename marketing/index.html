@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fight Club Central Coast | 10 Week Challenge</title>
+<meta name="description" content="Fight Club is a 10-week boxing program that gets everyday people into the ring for a real first fight — train in-house at Legacy Gym on the Central Coast, or through your own gym anywhere in NSW.">
+
+<!-- Google Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800;900&family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+<!-- Favicon: gold badge placeholder -->
+<link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+<link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
+<link rel="icon" type="image/png" sizes="64x64" href="assets/favicon-64.png">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+
+<style>
+  :root{
+    --bg:#0a0a0a;
+    --bg2:#141414;
+    --card:#181818;
+    --card-grad-top:#1c1c1c;
+    --card-grad-bottom:#0d0d0d;
+    --gold:#c9a227;
+    --gold-bright:#e8c65f;
+    --gold-mid:#b8912c;
+    --gold-dark:#6b5215;
+    --grey:#a9a49a;
+    --cream:#f2ede2;
+    --radius:14px;
+    --maxw:1160px;
+  }
+
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--cream);
+    font-family:'Inter',sans-serif;
+    font-weight:400;
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
+  }
+  h1,h2,h3{
+    font-family:'Cinzel',serif;
+    font-weight:800;
+    margin:0 0 .5em 0;
+    letter-spacing:.01em;
+    color:var(--cream);
+  }
+  h1{ font-weight:900; }
+  a{ color:inherit; text-decoration:none; }
+  img{ max-width:100%; display:block; }
+  .wrap{ max-width:var(--maxw); margin:0 auto; padding:0 24px; }
+  section{ padding:96px 0; }
+  .eyebrow{
+    font-family:'Oswald',sans-serif;
+    font-weight:600;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    font-size:13px;
+    color:var(--gold-bright);
+    margin-bottom:14px;
+    display:inline-block;
+  }
+  .lede{
+    color:var(--grey);
+    font-size:17px;
+    max-width:640px;
+  }
+
+  /* ---------- Buttons ---------- */
+  .btn{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    padding:16px 30px;
+    border-radius:6px;
+    font-family:'Oswald',sans-serif;
+    font-weight:600;
+    font-size:15px;
+    letter-spacing:.05em;
+    text-transform:uppercase;
+    cursor:pointer;
+    transition:transform .15s ease, box-shadow .15s ease, background .2s ease, border-color .2s ease;
+    border:2px solid transparent;
+    text-align:center;
+  }
+  .btn:active{ transform:translateY(1px); }
+  .btn-primary{
+    background:linear-gradient(180deg, var(--gold-bright), var(--gold-dark));
+    color:#fff;
+    box-shadow:0 6px 22px rgba(201,162,39,.25);
+  }
+  .btn-primary:hover{
+    box-shadow:0 8px 28px rgba(232,198,95,.4);
+    transform:translateY(-1px);
+  }
+  .btn-secondary{
+    background:transparent;
+    border:2px solid var(--gold);
+    color:var(--cream);
+  }
+  .btn-secondary:hover{
+    border-color:var(--gold-bright);
+    color:var(--gold-bright);
+  }
+  .btn-small{ padding:11px 20px; font-size:13px; }
+  .btn-block{ width:100%; }
+
+  /* ---------- Header / Nav ---------- */
+  header{
+    position:sticky;
+    top:0;
+    z-index:100;
+    background:rgba(10,10,10,.82);
+    backdrop-filter:blur(10px);
+    border-bottom:1px solid rgba(107,82,21,.4);
+  }
+  .nav{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:14px 24px;
+    max-width:var(--maxw);
+    margin:0 auto;
+  }
+  .brand{
+    display:flex;
+    align-items:center;
+    gap:12px;
+  }
+  .brand-badge{
+    height:40px;
+    width:40px;
+    flex-shrink:0;
+    object-fit:contain;
+  }
+  .brand-word{
+    font-family:'Cinzel',serif;
+    font-weight:800;
+    font-size:19px;
+    letter-spacing:.05em;
+    color:var(--cream);
+    line-height:1.1;
+  }
+  .brand-word span{ color:var(--gold-bright); }
+  .brand-sub{
+    font-family:'Oswald',sans-serif;
+    font-size:10px;
+    letter-spacing:.18em;
+    text-transform:uppercase;
+    color:var(--grey);
+  }
+  nav.links{
+    display:flex;
+    align-items:center;
+    gap:32px;
+  }
+  nav.links a.navlink{
+    font-family:'Oswald',sans-serif;
+    font-size:13px;
+    font-weight:600;
+    letter-spacing:.06em;
+    text-transform:uppercase;
+    color:var(--grey);
+    transition:color .2s ease;
+  }
+  nav.links a.navlink:hover{ color:var(--gold-bright); }
+  .nav-actions{ display:flex; align-items:center; gap:12px; }
+  .hamburger{
+    display:none;
+    flex-direction:column;
+    gap:5px;
+    background:none;
+    border:none;
+    cursor:pointer;
+    padding:6px;
+  }
+  .hamburger span{
+    width:24px; height:2px; background:var(--gold-bright); display:block;
+  }
+  .mobile-panel{
+    display:none;
+    flex-direction:column;
+    gap:18px;
+    padding:20px 24px 28px;
+    background:var(--bg2);
+    border-bottom:1px solid var(--gold-dark);
+  }
+  .mobile-panel a.navlink{
+    font-family:'Oswald',sans-serif;
+    font-weight:600;
+    letter-spacing:.06em;
+    text-transform:uppercase;
+    font-size:14px;
+    color:var(--cream);
+  }
+  .mobile-panel.open{ display:flex; }
+
+  /* ---------- Hero ---------- */
+  .hero{
+    position:relative;
+    padding:110px 0 100px;
+    background:
+      radial-gradient(ellipse at 50% -10%, rgba(201,162,39,.14), transparent 55%),
+      var(--bg);
+    text-align:center;
+    overflow:hidden;
+    border-bottom:1px solid rgba(107,82,21,.35);
+  }
+  .hero::before{
+    content:"";
+    position:absolute;
+    inset:0;
+    background:
+      repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(255,255,255,.012) 40px),
+      repeating-linear-gradient(90deg, transparent, transparent 39px, rgba(255,255,255,.012) 40px);
+    pointer-events:none;
+  }
+  .hero-inner{ position:relative; max-width:800px; margin:0 auto; padding:0 24px; }
+  .hero h1{
+    font-size:clamp(34px, 5.6vw, 58px);
+    line-height:1.12;
+    margin-bottom:22px;
+  }
+  .hero h1 .accent{ color:var(--gold-bright); }
+  .hero .lede{ margin:0 auto 40px; font-size:18px; max-width:560px; }
+  .hero-ctas{
+    display:flex;
+    gap:16px;
+    justify-content:center;
+    flex-wrap:wrap;
+  }
+  .hero-badge-row{
+    margin-top:56px;
+    display:flex;
+    gap:36px;
+    justify-content:center;
+    flex-wrap:wrap;
+  }
+  .hero-stat{ text-align:center; }
+  .hero-stat b{
+    display:block;
+    font-family:'Oswald',sans-serif;
+    font-weight:700;
+    font-size:26px;
+    color:var(--gold-bright);
+  }
+  .hero-stat span{
+    font-family:'Oswald',sans-serif;
+    font-size:11px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--grey);
+  }
+
+  /* ---------- What Is Fight Club ---------- */
+  /* ---------- Gallery ---------- */
+  .gallery-grid{
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:24px;
+    max-width:820px;
+    margin:0 auto;
+  }
+  .gallery-item{
+    margin:0;
+    border:2px solid var(--gold-dark);
+    border-radius:var(--radius);
+    overflow:hidden;
+    aspect-ratio:3/4;
+  }
+  .gallery-item img{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+    display:block;
+  }
+
+  .about{ text-align:center; }
+  .about .lede{ margin:0 auto 56px; text-align:left; }
+  .about-head{ text-align:center; }
+  .about-head .lede{ margin:0 auto 32px; text-align:center; max-width:720px; }
+  .about-body{
+    color:var(--grey);
+    font-size:15.5px;
+    text-align:left;
+    max-width:820px;
+    margin:0 auto 48px;
+  }
+  .feature-row{
+    display:grid;
+    grid-template-columns:repeat(2, 1fr);
+    gap:24px;
+    text-align:left;
+  }
+  .feature-card{
+    background:radial-gradient(120% 140% at 30% 0%, var(--card-grad-top), var(--card-grad-bottom));
+    border:2px solid var(--gold-dark);
+    border-radius:var(--radius);
+    padding:28px 24px;
+    min-width:0;
+  }
+  .feature-card .tag{
+    font-family:'Oswald',sans-serif;
+    font-weight:700;
+    font-size:13px;
+    letter-spacing:.1em;
+    text-transform:uppercase;
+    color:var(--gold-bright);
+    margin-bottom:10px;
+    display:block;
+  }
+  .feature-card p{ color:var(--grey); margin:0; font-size:15px; }
+
+  /* ---------- Section heading pattern ---------- */
+  .section-head{ text-align:center; margin-bottom:52px; }
+  .section-head h2{ font-size:clamp(28px,4vw,40px); }
+  .section-head .lede{ margin:0 auto; text-align:center; max-width:680px; }
+
+  /* ---------- Ways to Join ---------- */
+  .paths{ background:var(--bg2); border-top:1px solid rgba(107,82,21,.3); border-bottom:1px solid rgba(107,82,21,.3); }
+  .path-grid{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:26px;
+  }
+  .path-grid-2{
+    grid-template-columns:repeat(2,1fr);
+    max-width:880px;
+    margin:0 auto;
+  }
+  .path-card{
+    background:radial-gradient(120% 140% at 30% 0%, var(--card-grad-top), var(--card-grad-bottom));
+    border:2px solid var(--gold-dark);
+    border-radius:var(--radius);
+    padding:34px 28px;
+    display:flex;
+    flex-direction:column;
+    text-align:left;
+    min-width:0;
+  }
+  .path-card.featured{
+    border-color:var(--gold);
+    box-shadow:0 0 0 1px rgba(201,162,39,.25), 0 12px 40px rgba(201,162,39,.12);
+  }
+  .path-icon{
+    min-width:52px; height:52px;
+    padding:0 12px;
+    border-radius:10px;
+    border:2px solid var(--gold-dark);
+    display:inline-flex; align-items:center; justify-content:center;
+    font-family:'Oswald',sans-serif;
+    font-weight:700;
+    color:var(--gold-bright);
+    font-size:16px;
+    letter-spacing:.03em;
+    margin-bottom:20px;
+  }
+  .path-logo{
+    height:42px;
+    width:auto;
+    margin-bottom:22px;
+  }
+  .paths-note{
+    text-align:center;
+    color:var(--grey);
+    font-size:14px;
+    margin:36px auto 0;
+    max-width:600px;
+  }
+  .path-card h3{ font-size:22px; margin-bottom:10px; }
+  .path-card .path-kicker{
+    font-family:'Oswald',sans-serif;
+    font-weight:600;
+    font-size:11px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--gold);
+    margin-bottom:8px;
+    display:block;
+  }
+  .path-card p{ color:var(--grey); font-size:14.5px; flex:1; margin-bottom:26px; }
+  .path-price{
+    border-top:1px solid rgba(107,82,21,.5);
+    padding-top:16px;
+    margin-bottom:20px;
+  }
+  .path-price b{
+    display:block;
+    font-family:'Oswald',sans-serif;
+    font-weight:700;
+    font-size:24px;
+    color:var(--gold-bright);
+    margin-bottom:4px;
+  }
+  .path-price span{
+    display:block;
+    color:var(--grey);
+    font-size:13px;
+    line-height:1.5;
+  }
+
+  /* ---------- The App ---------- */
+  .app-section{ background:var(--bg2); border-top:1px solid rgba(107,82,21,.3); border-bottom:1px solid rgba(107,82,21,.3); }
+  .app-grid{
+    display:grid;
+    grid-template-columns:repeat(3, 1fr);
+    gap:24px;
+    text-align:left;
+  }
+  .app-cta{ text-align:center; margin-top:44px; }
+
+  /* ---------- 10-Week Challenge ---------- */
+  .camp{ }
+  .timeline{
+    position:relative;
+    max-width:900px;
+    margin:0 auto;
+    padding-left:0;
+  }
+  .timeline::before{
+    content:"";
+    position:absolute;
+    left:20px;
+    top:8px;
+    bottom:8px;
+    width:2px;
+    background:linear-gradient(var(--gold-dark), var(--gold), var(--gold-dark));
+  }
+  .tl-item{
+    position:relative;
+    padding:0 0 40px 60px;
+  }
+  .tl-item:last-child{ padding-bottom:0; }
+  .tl-dot{
+    position:absolute;
+    left:12px; top:2px;
+    width:18px; height:18px;
+    border-radius:50%;
+    background:var(--bg);
+    border:3px solid var(--gold-bright);
+  }
+  .tl-week{
+    font-family:'Oswald',sans-serif;
+    font-weight:700;
+    font-size:12px;
+    letter-spacing:.12em;
+    text-transform:uppercase;
+    color:var(--gold-bright);
+    margin-bottom:6px;
+    display:block;
+  }
+  .tl-item h3{ font-size:19px; margin-bottom:8px; }
+  .tl-item p{ color:var(--grey); margin:0; font-size:14.5px; max-width:560px; }
+
+  /* ---------- Fight Nights (coming soon) ---------- */
+  .nights{ background:var(--bg2); border-top:1px solid rgba(107,82,21,.3); border-bottom:1px solid rgba(107,82,21,.3); }
+  .nights-card{
+    max-width:760px;
+    margin:0 auto;
+    background:radial-gradient(120% 160% at 50% 0%, var(--card-grad-top), var(--card-grad-bottom));
+    border:2px dashed var(--gold-dark);
+    border-radius:var(--radius);
+    padding:56px 36px;
+    text-align:center;
+  }
+  .nights-card .eyebrow{ background:rgba(201,162,39,.12); padding:6px 14px; border-radius:100px; }
+  .nights-card h3{ font-size:26px; margin:14px 0 12px; }
+  .nights-card p{ color:var(--grey); max-width:480px; margin:0 auto 28px; }
+  .nights-stats{ margin-top:0; margin-bottom:32px; }
+
+  /* ---------- Footer ---------- */
+  footer{ background:var(--bg2); border-top:1px solid var(--gold-dark); padding:64px 0 32px; }
+  .footer-top{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    flex-wrap:wrap;
+    gap:40px;
+    padding-bottom:40px;
+    border-bottom:1px solid rgba(107,82,21,.35);
+  }
+  .footer-brand{ max-width:340px; }
+  .footer-brand .brand{ margin-bottom:14px; }
+  .footer-brand p{ color:var(--grey); font-size:14px; }
+  .footer-tagline{
+    font-family:'Cinzel',serif;
+    font-weight:700;
+    color:var(--gold-bright);
+    font-size:15px;
+    margin-top:12px;
+  }
+  .footer-cols{ display:flex; gap:64px; flex-wrap:wrap; }
+  .footer-col h4{
+    font-family:'Oswald',sans-serif;
+    font-size:12px;
+    letter-spacing:.12em;
+    text-transform:uppercase;
+    color:var(--gold);
+    margin:0 0 16px;
+  }
+  .footer-col a, .footer-col span{
+    display:block;
+    color:var(--grey);
+    font-size:14px;
+    margin-bottom:10px;
+  }
+  .footer-col a:hover{ color:var(--gold-bright); }
+  .footer-bottom{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    flex-wrap:wrap;
+    gap:12px;
+    padding-top:24px;
+    font-size:13px;
+    color:var(--grey);
+  }
+  .social-row{ display:flex; gap:16px; }
+  .social-row a{
+    width:36px; height:36px;
+    border:2px solid var(--gold-dark);
+    border-radius:8px;
+    display:flex; align-items:center; justify-content:center;
+    color:var(--gold-bright);
+    font-family:'Oswald',sans-serif;
+    font-size:12px;
+    font-weight:700;
+  }
+  .social-row a:hover{ border-color:var(--gold-bright); }
+
+  /* ---------- Responsive ---------- */
+  @media (max-width: 900px){
+    .feature-row, .path-grid, .app-grid{ grid-template-columns:1fr; }
+    .gallery-grid{ grid-template-columns:1fr; max-width:420px; }
+    section{ padding:72px 0; }
+  }
+  @media (max-width: 760px){
+    nav.links{ display:none; }
+    .hamburger{ display:flex; }
+    .nav-actions .btn-secondary{ display:none; }
+    .hero{ padding:80px 0 64px; }
+    .hero-badge-row{ gap:24px; }
+    .footer-top{ flex-direction:column; }
+  }
+  @media (max-width: 480px){
+    .hero-ctas{ flex-direction:column; align-items:stretch; }
+    .hero-ctas .btn{ width:100%; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="nav">
+    <a href="#top" class="brand">
+      <img class="brand-badge" src="assets/logo.png" alt="Fight Club Central Coast logo">
+      <span>
+        <span class="brand-word">FIGHT <span>CLUB</span></span><br>
+        <span class="brand-sub">Central Coast</span>
+      </span>
+    </a>
+
+    <nav class="links">
+      <a class="navlink" href="#about">About</a>
+      <a class="navlink" href="#paths">Ways to Join</a>
+      <a class="navlink" href="#app">The App</a>
+      <a class="navlink" href="#camp">10-Week Challenge</a>
+      <a class="navlink" href="#nights">Fight Nights</a>
+    </nav>
+
+    <div class="nav-actions">
+      <a class="btn btn-secondary btn-small" href="https://fightclubnsw.vercel.app/#/login">Log In</a>
+      <a class="btn btn-primary btn-small" href="https://fightclubnsw.vercel.app/#/signup">Register</a>
+      <button class="hamburger" id="hamburger" aria-label="Open menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </div>
+  <div class="mobile-panel" id="mobilePanel">
+    <a class="navlink" href="#about">About</a>
+    <a class="navlink" href="#paths">Ways to Join</a>
+    <a class="navlink" href="#app">The App</a>
+    <a class="navlink" href="#camp">10-Week Challenge</a>
+    <a class="navlink" href="#nights">Fight Nights</a>
+    <a class="btn btn-secondary btn-block" href="https://fightclubnsw.vercel.app/#/login">Log In</a>
+    <a class="btn btn-primary btn-block" href="https://fightclubnsw.vercel.app/#/signup">Register as a Fighter</a>
+  </div>
+</header>
+
+<section class="hero" id="top">
+  <div class="hero-inner">
+    <span class="eyebrow">Fight Club Central Coast</span>
+    <h1>Fight Club<br><span class="accent">10 Week Challenge</span></h1>
+    <p class="lede">Ten weeks of real boxing training that gets everyday people into the ring for a genuine first fight — a bucket-list moment, or the start of your boxing story. Train in-house at Legacy Gym, or through your own gym anywhere in NSW.</p>
+    <div class="hero-ctas">
+      <a class="btn btn-primary" href="https://fightclubnsw.vercel.app/#/signup">Register for the Challenge</a>
+      <a class="btn btn-secondary" href="https://fightclubnsw.vercel.app/#/login">Log In</a>
+    </div>
+    <div class="hero-badge-row">
+      <div class="hero-stat"><b>10</b><span>Week Challenge</span></div>
+      <div class="hero-stat"><b>1,000+</b><span>Central Coast Graduates</span></div>
+      <div class="hero-stat"><b>400+</b><span>Fight Night Crowd</span></div>
+      <div class="hero-stat"><b>Fair</b><span>AI Matchmaking</span></div>
+    </div>
+  </div>
+</section>
+
+<section class="gallery" id="gallery">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="eyebrow">Fight Night, For Real</span>
+      <h2>Inside Fight Club</h2>
+      <p class="lede">A look inside our fully custom fight venue — real fighters, real corners, real fight nights.</p>
+    </div>
+    <div class="gallery-grid">
+      <figure class="gallery-item">
+        <img src="assets/fight-night-venue.jpg" alt="Crowd and ring at a Fight Club fight night in the fully custom fight venue" loading="lazy">
+      </figure>
+      <figure class="gallery-item">
+        <img src="assets/corner-moment.jpg" alt="A fighter and coach sharing a moment ringside at Fight Club" loading="lazy">
+      </figure>
+    </div>
+  </div>
+</section>
+
+<section class="about" id="about">
+  <div class="wrap">
+    <div class="section-head about-head">
+      <span class="eyebrow">What Is Fight Club</span>
+      <h2>A team, not just a training block</h2>
+      <p class="lede">At its heart, Fight Club is a big group of everyday local people training together, in-house, at Legacy Gym on the Central Coast — pushing together, sparring together, and fighting together on the same fight night.</p>
+    </div>
+    <p class="about-body">Members consistently say it's done as much for their mental health, physical health, and self-confidence as it has for their boxing — Fight Club has helped plenty of people on the Central Coast find structure and confidence again, including some walking away from alcohol and drugs for good. For the vast majority of graduates, that's the whole point: ticking off the ultimate bucket-list challenge and finding out what they're really made of. A small few choose to keep going afterwards, into Fight Club's amateur pathway (coming soon). Fight Club has been running on the Central Coast for over ten years — previously as Red vs Blue, rebranded to Fight Club in 2025 — and over 1,000 people Central Coast–wide have now completed the Challenge.</p>
+    <div class="feature-row">
+      <div class="feature-card">
+        <span class="tag">Team, Not Solo</span>
+        <p>A big group of local people training, sparring, and fighting together, in-house at Legacy Gym — Fight Club is built around the team, not just the individual.</p>
+      </div>
+      <div class="feature-card">
+        <span class="tag">Fight Night</span>
+        <p>A real card in front of a live crowd of 400+ at our fully custom fight venue — not a sparring session, an actual fight night.</p>
+      </div>
+      <div class="feature-card">
+        <span class="tag">AI Matchmaking</span>
+        <p>Your weight, record, and sparring footage all sit in the app, so your match is built from real data gathered through the program — not decided on day one.</p>
+      </div>
+      <div class="feature-card">
+        <span class="tag">10 Years Running</span>
+        <p>Formerly Red vs Blue, rebranded Fight Club in 2025 — over a decade putting everyday Central Coast people in the ring.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="paths" id="paths">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="eyebrow">How You Train</span>
+      <h2>Two ways to take the Challenge</h2>
+      <p class="lede">However close you are to the Central Coast, there's a way to do the Fight Club 10 Week Challenge and get your first fight.</p>
+    </div>
+    <div class="path-grid path-grid-2">
+      <div class="path-card featured">
+        <img class="path-logo" src="assets/legacy-gym-logo.png" alt="Legacy Gym logo">
+        <span class="path-kicker">Central Coast</span>
+        <h3>Train In-House at Legacy Gym</h3>
+        <p>Sign up and train together, in-house, at Legacy Gym on the Central Coast — as part of the team, not on your own. Ten weeks of drills, skill work, sparring, and conditioning gets you fight-ready for fight night in front of a live crowd at our fully custom fight venue — your first official amateur bout, registered with the NSW Combat Sports Authority and the ABL.</p>
+        <div class="path-price"><b>$74.99</b><span>per week — includes all fight training plus unlimited Legacy Gym access (classes, boxing, strength &amp; conditioning, gym use, swipe pass)</span></div>
+        <a class="btn btn-primary btn-block" href="https://fightclubnsw.vercel.app/#/signup">Register — Train at Legacy Gym</a>
+      </div>
+      <div class="path-card">
+        <div class="path-icon">NSW</div>
+        <span class="path-kicker">Anywhere in NSW</span>
+        <h3>Train at Your Own Gym</h3>
+        <p>Not near the Central Coast? Complete the Challenge through any gym in NSW under the ABL. Your day-to-day training stays with your own coach and team. Throughout the ten weeks you'll take part in communal sparring days and competition sparring events so we can find your best possible match — training out of Sydney or Newcastle instead, we bring a Fight Club rep to a local sparring day to watch and film you, and you can upload sparring footage through the app too. We strongly encourage getting to the Central Coast at least once during the ten weeks for your final matchup. You'll also need to register with the NSW Combat Sports Authority for your Blue Book, complete your medical and bloodwork, and register with the ABL.</p>
+        <div class="path-price"><b>$149</b><span>one-off Fight Club registration fee — covers your shirt and hand wraps. No ongoing charge to Fight Club; your training cost is between you and your own gym</span></div>
+        <a class="btn btn-secondary btn-block" href="https://fightclubnsw.vercel.app/#/signup">Register — Train at Your Own Gym</a>
+      </div>
+    </div>
+    <p class="paths-note">Fight Club also supports fighters building a competitive amateur or professional record through the same app — that path is coming soon.</p>
+  </div>
+</section>
+
+<section class="app-section" id="app">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="eyebrow">The Fight Club App</span>
+      <h2>Everything in one place</h2>
+      <p class="lede">Every fighter runs their whole Fight Club journey from the app — here's what's inside.</p>
+    </div>
+    <div class="app-grid">
+      <div class="feature-card">
+        <span class="tag">Full Fighter Profile</span>
+        <p>Photo, weight, name, club, trainers, and stance — your whole boxing identity lives in one profile.</p>
+      </div>
+      <div class="feature-card">
+        <span class="tag">See Your Weight Division</span>
+        <p>Browse every fighter across every club in your division, and watch your matching pool narrow as fight time gets closer.</p>
+      </div>
+      <div class="feature-card">
+        <span class="tag">Coach-Programmed Training</span>
+        <p>Extra training sessions programmed by coaches for you to follow in between your regular classes.</p>
+      </div>
+      <div class="feature-card">
+        <span class="tag">Sparring Uploads</span>
+        <p>Upload your own sparring footage so coaches can help get your match right, wherever you're training from.</p>
+      </div>
+      <div class="feature-card">
+        <span class="tag">Fight Nights &amp; Tickets</span>
+        <p>Event information and ticket sales for every Fight Club fight night, all in the one app.</p>
+      </div>
+      <div class="feature-card">
+        <span class="tag">Locked-In Matchups</span>
+        <p>Once your match is made, it's locked in the app — so you can see exactly who you're fighting, and everything that goes with it.</p>
+      </div>
+    </div>
+    <div class="app-cta">
+      <a class="btn btn-primary" href="https://fightclubnsw.vercel.app/#/signup">Register to Get the App</a>
+    </div>
+  </div>
+</section>
+
+<section class="camp" id="camp">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="eyebrow">The Journey</span>
+      <h2>The 10-Week Challenge</h2>
+      <p class="lede">Once you're matched to a fight night, the countdown starts. Ten structured weeks turn a sign-up into a fight-ready athlete — this is what makes Fight Club feel like a lot more than a gym membership.</p>
+    </div>
+    <div class="timeline">
+      <div class="tl-item">
+        <div class="tl-dot"></div>
+        <span class="tl-week">Week 1 — Challenge Begins</span>
+        <h3>Your profile is locked in and training starts</h3>
+        <p>Your fighter profile, coach, and gym are locked in, and your 10-week countdown to fight night starts. Your match isn't set yet — that gets built up from real sparring data as the weeks go on.</p>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot"></div>
+        <span class="tl-week">Weeks 2–4 — Foundation</span>
+        <h3>Conditioning and challenge fundamentals</h3>
+        <p>Early weeks build the base: conditioning, technique, and weight tracking, with your coach setting the training blocks around your fight date. The first communal sparring days start around here too, feeding real data into your eventual match.</p>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot"></div>
+        <span class="tl-week">Weeks 5–8 — Sharpen</span>
+        <h3>Sparring and fight-specific prep</h3>
+        <p>Training sharpens toward fight night — sparring, tactics, and weight management ramp up. Multiple communal sparring days and competition sparring events run through this stretch to find your fairest possible match. Training out of Sydney or Newcastle? A Fight Club rep comes to a local sparring day to watch and film you instead, and you can upload sparring footage through the app too.</p>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot"></div>
+        <span class="tl-week">Week 9 — Fight Week Prep</span>
+        <h3>Taper and final checks</h3>
+        <p>Training tapers, weight is finalised, and your fight card details — including your matched opponent — are confirmed.</p>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot"></div>
+        <span class="tl-week">Week 10 — Fight Night</span>
+        <h3>You step in the ring</h3>
+        <p>Your first official amateur bout, in front of a live crowd at our fully custom fight venue — registered with the NSW Combat Sports Authority and the ABL.</p>
+      </div>
+    </div>
+    <p class="paths-note">Training at your own gym? Your day-to-day sessions stay with your own coach and team throughout — the sparring days (or your local Sydney/Newcastle sparring day) are for matchmaking only. We strongly encourage getting to the Central Coast at least once during the ten weeks for your final matchup.</p>
+  </div>
+</section>
+
+<section class="nights" id="nights">
+  <div class="wrap">
+    <div class="nights-card">
+      <span class="eyebrow">Next Intake</span>
+      <h3>Week 1 starts Monday, 12 October 2026</h3>
+      <p>Ten weeks of training leads to Fight Night on Saturday, 19 December 2026, at our fully custom fight venue in front of a live crowd. Registration for this intake is opening now.</p>
+      <div class="hero-badge-row nights-stats">
+        <div class="hero-stat"><b>12 Oct</b><span>Week 1 Starts</span></div>
+        <div class="hero-stat"><b>19 Dec</b><span>Fight Night 2026</span></div>
+      </div>
+      <a class="btn btn-primary" href="https://fightclubnsw.vercel.app/#/signup">Register for This Intake</a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="footer-top">
+      <div class="footer-brand">
+        <a href="#top" class="brand">
+          <img class="brand-badge" src="assets/logo.png" alt="Fight Club Central Coast logo">
+          <span>
+            <span class="brand-word">FIGHT <span>CLUB</span></span><br>
+            <span class="brand-sub">Central Coast</span>
+          </span>
+        </a>
+        <p class="footer-tagline">Fight Club 10 Week Challenge</p>
+      </div>
+      <div class="footer-cols">
+        <div class="footer-col">
+          <h4>Fight Club</h4>
+          <a href="#about">What Is Fight Club</a>
+          <a href="#paths">Ways to Join</a>
+          <a href="#app">The App</a>
+          <a href="#camp">10-Week Challenge</a>
+          <a href="#nights">Fight Nights</a>
+        </div>
+        <div class="footer-col">
+          <h4>Account</h4>
+          <a href="https://fightclubnsw.vercel.app/#/signup">Register</a>
+          <a href="https://fightclubnsw.vercel.app/#/login">Log In</a>
+        </div>
+        <div class="footer-col">
+          <h4>Contact</h4>
+          <span>info@fightclubnsw.com.au</span>
+          <span>Central Coast, NSW</span>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© <span id="year"></span> Fight Club Central Coast. All rights reserved.</span>
+      <div class="social-row">
+        <a href="#" aria-label="Instagram">IG</a>
+        <a href="#" aria-label="Facebook">FB</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script>
+  document.getElementById('year').textContent = new Date().getFullYear();
+  var hamburger = document.getElementById('hamburger');
+  var panel = document.getElementById('mobilePanel');
+  hamburger.addEventListener('click', function(){
+    panel.classList.toggle('open');
+  });
+  panel.querySelectorAll('a').forEach(function(a){
+    a.addEventListener('click', function(){ panel.classList.remove('open'); });
+  });
+</script>
+
+</body>
+</html>
