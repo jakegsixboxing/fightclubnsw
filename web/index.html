@@ -319,8 +319,12 @@ const pfDb = {
     return data;
   },
   async fightersForPicker() {
+    // Fight Club Challengers (bucket-list/corporate entrants) aren't part of
+    // the competitive Am/Pro ladder, so they're excluded from the matchmaking
+    // pool and the manual fighter-picker.
     const { data, error } = await pfSupabase.from("pf_fighters_flat")
       .select("id, full_name, gym_name, boxer_type, wins, losses, draws, exhibition_bouts, weight_division_id, availability, division_label, division_name, division_type, division_sort")
+      .neq("boxer_type", "challenger")
       .order("division_type").order("division_sort").order("full_name");
     if (error) throw error;
     return data;
@@ -652,7 +656,7 @@ const PF_ICONS = {
 // bounces to Log In, same as the old top nav links did.
 const PF_TABS = [
   { href: "#/", label: "Home", icon: "home", match: (p) => p === "/" },
-  { href: "#/fighters", label: "Fighters", icon: "fighters", match: (p) => p.startsWith("/fighters") },
+  { href: "#/fighters", label: "Fighters AM/PRO", icon: "fighters", match: (p) => p.startsWith("/fighters") },
   { href: "#/events", label: "Events", icon: "events", match: (p) => p.startsWith("/events") },
   { href: "#/offers", label: "Nominations", icon: "offers", match: (p) => p.startsWith("/offers") || p.startsWith("/matching-pool") },
   { href: "#/confirmed", label: "Matches", icon: "matches", match: (p) => p.startsWith("/confirmed") },
@@ -707,7 +711,7 @@ function pfRenderNav() {
 // same sections as the bottom tab bar (minus Home itself), just presented
 // as large stacked tiles so they're the first thing a member sees.
 const PF_HOME_TILES = [
-  { href: "#/fighters", icon: "fighters", eyebrow: "The Roster", title: "Fighters", sub: "Every registered fighter, gym & record." },
+  { href: "#/fighters", icon: "fighters", eyebrow: "The Roster", title: "Fighters AM/PRO", sub: "Every registered fighter, gym & record." },
   { href: "#/events", icon: "events", eyebrow: "Fight Nights", title: "Events", sub: "Upcoming fight nights — view and nominate." },
   { href: "#/offers", icon: "offers", eyebrow: "Offers & Noms", title: "Nominations", sub: "Your pending fight offers and the matching pool." },
   { href: "#/confirmed", icon: "matches", eyebrow: "Fight Card", title: "Matches", sub: "Confirmed bouts and results." },
@@ -856,9 +860,12 @@ function pfSignupPage(error) {
   return `
     <section class="section">
       <h1>Register</h1>
+      <p class="sub">Step 1 of 2 &mdash; create your account. Next you'll build your full Fight Club profile.</p>
       ${pfFlash(error)}
       <form class="pf-form" data-form="signup">
+        <div class="field"><label>Full name</label><input type="text" name="full_name" autocomplete="name" required></div>
         <div class="field"><label>Email</label><input type="email" name="email" autocomplete="email" required></div>
+        <div class="field"><label>Mobile number</label><input type="tel" name="mobile" autocomplete="tel" placeholder="e.g. 0412 345 678" required></div>
         <div class="field"><label>Password</label><input type="password" name="password" autocomplete="new-password" minlength="8" required><p class="hint">At least 8 characters.</p></div>
         <div class="field"><label>Confirm password</label><input type="password" name="password2" autocomplete="new-password" minlength="8" required></div>
         <button class="btn btn-gold" type="submit">Create account</button>
@@ -885,54 +892,72 @@ async function pfViewRegister(prefill = {}, error = "") {
   if (!pfRequireLogin()) return;
   const existing = pfState.fighter || {};
   const isEdit = !!existing.id;
-  const fighter = { ...existing, ...prefill };
+  const meta = (pfState.user && pfState.user.user_metadata) || {};
+  // Step 1 (signup) collects full name + mobile — carry them over as the
+  // starting point for step 2's full profile, still fully editable here.
+  const fighter = { full_name: meta.full_name || "", mobile: meta.mobile || "", ...existing, ...prefill };
   const divisions = await pfDb.weightDivisionsByType();
   const boxerType = fighter.boxer_type || "amateur";
+  const isChallenger = boxerType === "challenger";
   const divisionOptions = (divisions[boxerType] || []).map((d) => `<option value="${d.id}" ${String(d.id) === String(fighter.weight_division_id) ? "selected" : ""}>${pfEscape(d.label)}</option>`).join("");
 
   pfSetBody(`
     <section class="section">
       <h1>${isEdit ? "Edit Your Profile" : "Build Your Fight Club Profile"}</h1>
-      ${isEdit ? "" : `<p class="sub">Before you can see the roster, events, or nominate for a fight night, tell us who you are.</p>`}
+      ${isEdit ? "" : `<p class="sub">Step 2 of 2 &mdash; before you can see the roster, events, or nominate for a fight night, tell us who you are.</p>`}
       ${pfFlash(error)}
       <form class="pf-form" data-form="register" data-fighter-id="${isEdit ? existing.id : ""}">
         <div class="field"><label>Full name</label><input type="text" name="full_name" value="${pfEscape(fighter.full_name || "")}" required></div>
+        <div class="field"><label>Date of birth</label><input type="date" name="date_of_birth" value="${pfEscape(fighter.date_of_birth || "")}" required></div>
+        <div class="field"><label>Combat Sports Australia number <span style="opacity:.7">(if you have one)</span></label><input type="text" name="combat_sports_number" value="${pfEscape(fighter.combat_sports_number || "")}"></div>
         <div class="field"><label>Gym name</label><input type="text" name="gym_name" value="${pfEscape(fighter.gym_name || "")}" required></div>
         <div class="field"><label>Coach name</label><input type="text" name="coach_name" value="${pfEscape(fighter.coach_name || "")}" required></div>
         <div class="field"><label>Gym town</label><input type="text" name="gym_town" value="${pfEscape(fighter.gym_town || "")}" required></div>
         <div class="field"><label>Gym postcode</label><input type="text" name="gym_postcode" value="${pfEscape(fighter.gym_postcode || "")}" pattern="\\d{4}" required></div>
+        <div class="field"><label>Email</label><input type="email" value="${pfEscape((pfState.user && pfState.user.email) || "")}" disabled></div>
+        <div class="field"><label>Mobile</label><input type="tel" name="mobile" value="${pfEscape(fighter.mobile || "")}" placeholder="e.g. 0412 345 678" required></div>
         <div class="field">
-          <label>Are you a Fight Club Challenger &mdash; Amateur or Pro?</label>
+          <label>What type of fighter are you?</label>
           <div class="radio-row">
             <label><input type="radio" name="boxer_type" value="amateur" ${boxerType === "amateur" ? "checked" : ""}> Amateur</label>
             <label><input type="radio" name="boxer_type" value="professional" ${boxerType === "professional" ? "checked" : ""}> Professional</label>
+            <label><input type="radio" name="boxer_type" value="challenger" ${isChallenger ? "checked" : ""}> Fight Club Challenger <span style="opacity:.7">(Bucket List / Corporate Experience)</span></label>
           </div>
         </div>
-        <div class="field"><label>Weight division</label><select name="weight_division_id" id="pf-weight-select" required>${divisionOptions}</select></div>
+        <div class="field"><label>Stance</label>
+          <select name="stance" required>
+            <option value="orthodox" ${fighter.stance === "orthodox" ? "selected" : ""}>Orthodox</option>
+            <option value="southpaw" ${fighter.stance === "southpaw" ? "selected" : ""}>Southpaw</option>
+            <option value="switch" ${fighter.stance === "switch" ? "selected" : ""}>Switch</option>
+          </select>
+        </div>
+        <div id="pf-competitive-fields" style="${isChallenger ? "display:none" : ""}">
+          <div class="field"><label>Fight weight / weight division</label><select name="weight_division_id" id="pf-weight-select" ${isChallenger ? "" : "required"}>${divisionOptions}</select></div>
+          <div class="field">
+            <label>Do you hold a title?</label>
+            <div class="radio-row">
+              <label><input type="radio" name="has_title" value="yes" ${fighter.has_title ? "checked" : ""}> Yes</label>
+              <label><input type="radio" name="has_title" value="no" ${!fighter.has_title ? "checked" : ""}> No</label>
+            </div>
+          </div>
+          <div class="field" id="pf-title-details" style="${fighter.has_title ? "" : "display:none"}">
+            <label>Title level</label>
+            <div class="radio-row">
+              <label><input type="radio" name="title_level" value="regional" ${fighter.title_level === "regional" ? "checked" : ""}> Regional</label>
+              <label><input type="radio" name="title_level" value="nsw" ${fighter.title_level === "nsw" ? "checked" : ""}> NSW</label>
+              <label><input type="radio" name="title_level" value="australian" ${fighter.title_level === "australian" ? "checked" : ""}> Australian</label>
+            </div>
+            <div class="radio-row" style="margin-top:8px">
+              <label><input type="radio" name="title_current" value="current" ${fighter.title_current ? "checked" : ""}> Current holder</label>
+              <label><input type="radio" name="title_current" value="former" ${fighter.title_current === false && fighter.has_title ? "checked" : ""}> Former holder</label>
+            </div>
+          </div>
+        </div>
         <div class="field"><label>Wins</label><input type="number" name="wins" min="0" value="${fighter.wins ?? 0}"></div>
         <div class="field"><label>Losses</label><input type="number" name="losses" min="0" value="${fighter.losses ?? 0}"></div>
         <div class="field"><label>Draws</label><input type="number" name="draws" min="0" value="${fighter.draws ?? 0}"></div>
         <div class="field"><label>Exhibition bouts</label><input type="number" name="exhibition_bouts" min="0" value="${fighter.exhibition_bouts ?? 0}"></div>
-        <div class="field"><label>KO/TKO wins</label><input type="number" name="ko_tko_wins" min="0" value="${fighter.ko_tko_wins ?? 0}"></div>
-        <div class="field">
-          <label>Do you hold a title?</label>
-          <div class="radio-row">
-            <label><input type="radio" name="has_title" value="yes" ${fighter.has_title ? "checked" : ""}> Yes</label>
-            <label><input type="radio" name="has_title" value="no" ${!fighter.has_title ? "checked" : ""}> No</label>
-          </div>
-        </div>
-        <div class="field" id="pf-title-details" style="${fighter.has_title ? "" : "display:none"}">
-          <label>Title level</label>
-          <div class="radio-row">
-            <label><input type="radio" name="title_level" value="regional" ${fighter.title_level === "regional" ? "checked" : ""}> Regional</label>
-            <label><input type="radio" name="title_level" value="nsw" ${fighter.title_level === "nsw" ? "checked" : ""}> NSW</label>
-            <label><input type="radio" name="title_level" value="australian" ${fighter.title_level === "australian" ? "checked" : ""}> Australian</label>
-          </div>
-          <div class="radio-row" style="margin-top:8px">
-            <label><input type="radio" name="title_current" value="current" ${fighter.title_current ? "checked" : ""}> Current holder</label>
-            <label><input type="radio" name="title_current" value="former" ${fighter.title_current === false && fighter.has_title ? "checked" : ""}> Former holder</label>
-          </div>
-        </div>
+        <div class="field"><label>Wins by KO/TKO</label><input type="number" name="ko_tko_wins" min="0" value="${fighter.ko_tko_wins ?? 0}"></div>
         <div class="field">
           <label>Availability</label>
           <select name="availability">
@@ -943,6 +968,7 @@ async function pfViewRegister(prefill = {}, error = "") {
         </div>
         <div class="field">
           <label>Photo${isEdit ? " (leave blank to keep current)" : ""}</label>
+          <p class="hint">Must be a clear, front-facing photo of your own face &mdash; no sunglasses, group photos, or logos.</p>
           <input type="file" name="photo" id="pf-photo-input" accept="image/jpeg,image/png,image/webp" ${isEdit ? "" : "required"}>
           <img id="pf-photo-preview" class="photo-preview" src="${fighter.photo_path ? pfEscape(fighter.photo_path) : ""}" style="${fighter.photo_path ? "display:block" : ""}">
         </div>
@@ -964,8 +990,18 @@ async function pfViewRegister(prefill = {}, error = "") {
   }));
   document.querySelectorAll('input[name="boxer_type"]').forEach((r) => r.addEventListener("change", async () => {
     const type = document.querySelector('input[name="boxer_type"]:checked').value;
-    const list = (await pfDb.weightDivisions(type)) || [];
-    document.getElementById("pf-weight-select").innerHTML = list.map((d) => `<option value="${d.id}">${pfEscape(d.label)}</option>`).join("");
+    const competitiveFields = document.getElementById("pf-competitive-fields");
+    const weightSelect = document.getElementById("pf-weight-select");
+    if (type === "challenger") {
+      competitiveFields.style.display = "none";
+      weightSelect.removeAttribute("required");
+      weightSelect.value = "";
+    } else {
+      competitiveFields.style.display = "";
+      weightSelect.setAttribute("required", "required");
+      const list = (await pfDb.weightDivisions(type)) || [];
+      weightSelect.innerHTML = list.map((d) => `<option value="${d.id}">${pfEscape(d.label)}</option>`).join("");
+    }
   }));
 }
 
@@ -1046,16 +1082,16 @@ async function pfViewFighterProfile(id) {
     .sort((a, b) => new Date(a.event_date) - new Date(b.event_date))[0] || null;
   const campHtml = isOwner ? pfCampPanel(nextConfirmedBout) : "";
 
-  const challenger = fighter.boxer_type === "professional" ? "Pro" : "Amateur";
+  const backHref = fighter.boxer_type === "challenger" ? "#/fighters/challengers" : "#/fighters";
   pfSetBody(`
     <section class="section">
-      <a href="#/fighters" data-link class="back-link">&larr; Fighters</a>
+      <a href="${backHref}" data-link class="back-link">&larr; Fighters</a>
       ${campHtml}
       <div class="profile-frame">
         <div class="profile-grid">
           <img class="roster-photo" src="${fighter.photo_path ? pfEscape(fighter.photo_path) : '/fighter-placeholder.svg'}">
           <div>
-            <span class="challenger-badge">Fight Club Challenger &mdash; ${challenger}</span>
+            <span class="challenger-badge">${pfBoxerTypeLabel(fighter.boxer_type)}</span>
             <span class="avail-badge avail-${pfEscape(fighter.availability || "open")}">${pfAvailLabel(fighter.availability)}</span>
             <h1 style="margin-top:0">${pfEscape(fighter.full_name)}${fighter.has_title ? ` <span class="badge">${pfEscape(fighter.title_level)} title</span>` : ""}</h1>
             <p class="sub" style="margin-bottom:12px">${pfEscape(fighter.division_label || "")}</p>
@@ -1083,22 +1119,34 @@ function pfAvailLabel(a) {
   return "Open to fight";
 }
 
-async function pfViewFighterProfiles() {
-  if (!pfRequireLogin()) return;
-  pfSetBody(`<div class="spinner-msg">Loading roster…</div>`);
-  const fighters = await pfDb.allFighters();
-  const divisions = [...new Set(fighters.map((f) => f.division_label).filter(Boolean))].sort();
-  const divisionOptions = divisions.map((d) => `<option value="${pfEscape(d)}">${pfEscape(d)}</option>`).join("");
-  const cards = fighters.map((f) => {
-    const challenger = f.boxer_type === "professional" ? "Pro" : "Amateur";
-    const availability = f.availability || "open";
-    const searchBlob = `${f.full_name || ""} ${f.gym_name || ""}`.toLowerCase();
-    return `
+// Amateur/Professional fighters get a plain type badge; Fight Club
+// Challengers (bucket-list/corporate entrants, not on the competitive
+// ladder) get their own distinct badge — see boxer_type on pf_fighters.
+function pfBoxerTypeLabel(boxerType) {
+  if (boxerType === "professional") return "Professional";
+  if (boxerType === "challenger") return "Fight Club Challenger";
+  return "Amateur";
+}
+
+// Shared by both the AM/PRO roster and the Fight Club Challengers roster —
+// the two are the same card layout, just a different slice of fighters.
+function pfRosterSubnav(active) {
+  return `
+    <div class="stat-row" style="margin-bottom:6px">
+      <a href="#/fighters" data-link class="pill ${active === "amp" ? "active" : ""}">Fighters AM/PRO</a>
+      <a href="#/fighters/challengers" data-link class="pill ${active === "challengers" ? "active" : ""}">Fight Club Challengers <span style="opacity:.7">(Bucket List / Corporate Experience)</span></a>
+    </div>`;
+}
+
+function pfRosterCard(f) {
+  const availability = f.availability || "open";
+  const searchBlob = `${f.full_name || ""} ${f.gym_name || ""}`.toLowerCase();
+  return `
     <a href="#/fighters/${f.id}" data-link class="roster-card" data-search="${pfEscape(searchBlob)}" data-division="${pfEscape(f.division_label || "")}" data-type="${pfEscape(f.boxer_type || "")}" data-availability="${pfEscape(availability)}">
       <div class="roster-card-top">
         <img class="roster-photo" src="${f.photo_path ? pfEscape(f.photo_path) : '/fighter-placeholder.svg'}" alt="${pfEscape(f.full_name)}">
         <div>
-          <span class="challenger-badge">Fight Club Challenger &mdash; ${challenger}</span>
+          <span class="challenger-badge">${pfBoxerTypeLabel(f.boxer_type)}</span>
           <span class="avail-badge avail-${pfEscape(availability)}">${pfAvailLabel(availability)}</span>
           <p class="roster-name">${pfEscape(f.full_name)}</p>
           <p class="roster-division">${pfEscape(f.division_label || "")}</p>
@@ -1112,10 +1160,22 @@ async function pfViewFighterProfiles() {
       </div>
       <div class="roster-gym"><strong>Gym:</strong> ${pfEscape(f.gym_name)}</div>
     </a>`;
-  }).join("");
+}
+
+async function pfViewFighterProfiles() {
+  if (!pfRequireLogin()) return;
+  pfSetBody(`<div class="spinner-msg">Loading roster…</div>`);
+  const allFighters = await pfDb.allFighters();
+  // The Am/Pro roster excludes Fight Club Challengers — they get their own
+  // roster tab (bucket-list/corporate entrants aren't on the competitive ladder).
+  const fighters = allFighters.filter((f) => f.boxer_type !== "challenger");
+  const divisions = [...new Set(fighters.map((f) => f.division_label).filter(Boolean))].sort();
+  const divisionOptions = divisions.map((d) => `<option value="${pfEscape(d)}">${pfEscape(d)}</option>`).join("");
+  const cards = fighters.map(pfRosterCard).join("");
   pfSetBody(`
     <section class="section">
-      <h1>Fighters</h1>
+      <h1>Fighters AM/PRO</h1>
+      ${pfRosterSubnav("amp")}
       <div class="roster-filters">
         <input type="text" id="pf-roster-search" placeholder="Search name or gym…">
         <select id="pf-roster-division"><option value="">All divisions</option>${divisionOptions}</select>
@@ -1150,6 +1210,41 @@ async function pfViewFighterProfiles() {
     el?.addEventListener("change", applyRosterFilters);
   });
   document.getElementById("pf-roster-open-only")?.addEventListener("change", applyRosterFilters);
+}
+
+// Fight Club Challengers: bucket-list / corporate-experience entrants who
+// registered a profile but aren't competing on the Am/Pro ladder. Reuses the
+// same roster-card layout, just a different filtered slice + no division/type
+// filters (challengers don't have a weight division).
+async function pfViewChallengers() {
+  if (!pfRequireLogin()) return;
+  pfSetBody(`<div class="spinner-msg">Loading Fight Club Challengers…</div>`);
+  const allFighters = await pfDb.allFighters();
+  const fighters = allFighters.filter((f) => f.boxer_type === "challenger");
+  const cards = fighters.map(pfRosterCard).join("");
+  pfSetBody(`
+    <section class="section">
+      <h1>Fight Club Challengers <span style="opacity:.7;font-size:.6em">(Bucket List / Corporate Experience)</span></h1>
+      ${pfRosterSubnav("challengers")}
+      <div class="roster-filters">
+        <input type="text" id="pf-roster-search" placeholder="Search name or gym…">
+      </div>
+      <p class="roster-count" id="pf-roster-count">${fighters.length} registered</p>
+      <div class="roster-list">${cards || '<p class="empty-state">No Fight Club Challengers registered yet.</p>'}</div>
+    </section>`);
+
+  document.getElementById("pf-roster-search")?.addEventListener("input", () => {
+    const search = (document.getElementById("pf-roster-search")?.value || "").trim().toLowerCase();
+    const cardEls = document.querySelectorAll(".roster-list .roster-card");
+    let visible = 0;
+    cardEls.forEach((card) => {
+      const show = !search || card.dataset.search.includes(search);
+      card.classList.toggle("is-hidden", !show);
+      if (show) visible++;
+    });
+    const countEl = document.getElementById("pf-roster-count");
+    if (countEl) countEl.textContent = cardEls.length ? `${visible} of ${cardEls.length} shown` : "0 registered";
+  });
 }
 
 async function pfViewEventsList() {
@@ -1388,6 +1483,7 @@ const PF_ROUTES = [
   [/^\/me$/, () => { if (!pfRequireLogin()) return; if (!pfState.fighter) { location.hash = "#/register"; return; } location.hash = `#/fighters/${pfState.fighter.id}`; }],
   [/^\/register$/, () => pfViewRegister()],
   [/^\/fighters$/, () => pfViewFighterProfiles()],
+  [/^\/fighters\/challengers$/, () => pfViewChallengers()],
   [/^\/fighters\/(\d+)$/, (m) => pfViewFighterProfile(Number(m[1]))],
   [/^\/events$/, () => pfViewEventsList()],
   [/^\/events\/new$/, () => pfViewEventForm()],
@@ -1440,11 +1536,15 @@ document.addEventListener("submit", async (e) => {
 
   try {
     if (kind === "signup") {
+      const fullName = String(fd.get("full_name") || "").trim();
       const email = String(fd.get("email") || "").trim().toLowerCase();
+      const mobile = String(fd.get("mobile") || "").trim();
       const password = String(fd.get("password") || "");
       const password2 = String(fd.get("password2") || "");
+      if (!fullName) throw new Error("Please enter your full name.");
+      if (!mobile) throw new Error("Please enter a mobile number.");
       if (password !== password2) throw new Error("Passwords do not match.");
-      const { error } = await pfSupabase.auth.signUp({ email, password });
+      const { error } = await pfSupabase.auth.signUp({ email, password, options: { data: { full_name: fullName, mobile } } });
       if (error) throw error;
       location.hash = "#/register";
     } else if (kind === "login") {
@@ -1454,26 +1554,36 @@ document.addEventListener("submit", async (e) => {
       if (error) throw new Error("Incorrect email or password.");
       location.hash = "#/me";
     } else if (kind === "register") {
+      const boxerType = String(fd.get("boxer_type") || "amateur");
+      const isChallenger = boxerType === "challenger";
       const record = {
         full_name: String(fd.get("full_name") || "").trim(),
+        date_of_birth: String(fd.get("date_of_birth") || "").trim() || null,
+        combat_sports_number: String(fd.get("combat_sports_number") || "").trim() || null,
+        mobile: String(fd.get("mobile") || "").trim(),
+        stance: String(fd.get("stance") || "").trim() || null,
         gym_name: String(fd.get("gym_name") || "").trim(),
         coach_name: String(fd.get("coach_name") || "").trim(),
         gym_town: String(fd.get("gym_town") || "").trim(),
         gym_postcode: String(fd.get("gym_postcode") || "").trim(),
-        boxer_type: String(fd.get("boxer_type") || "amateur"),
-        weight_division_id: Number(fd.get("weight_division_id")),
+        boxer_type: boxerType,
+        // Fight Club Challengers aren't on the competitive Am/Pro ladder, so
+        // they skip weight division + title tracking entirely.
+        weight_division_id: isChallenger ? null : Number(fd.get("weight_division_id")),
         wins: Number(fd.get("wins")) || 0,
         losses: Number(fd.get("losses")) || 0,
         draws: Number(fd.get("draws")) || 0,
         exhibition_bouts: Number(fd.get("exhibition_bouts")) || 0,
         ko_tko_wins: Number(fd.get("ko_tko_wins")) || 0,
-        has_title: fd.get("has_title") === "yes",
-        title_level: fd.get("has_title") === "yes" ? fd.get("title_level") : null,
+        has_title: !isChallenger && fd.get("has_title") === "yes",
+        title_level: !isChallenger && fd.get("has_title") === "yes" ? fd.get("title_level") : null,
         title_region: null,
-        title_current: fd.get("has_title") === "yes" && fd.get("title_current") === "current",
+        title_current: !isChallenger && fd.get("has_title") === "yes" && fd.get("title_current") === "current",
         availability: fd.get("availability") || "open",
       };
       if (!/^\d{4}$/.test(record.gym_postcode)) throw new Error("Gym postcode must be a 4-digit number.");
+      if (!record.mobile) throw new Error("Please enter a mobile number.");
+      if (!isChallenger && !record.weight_division_id) throw new Error("Please choose a fight weight / weight division.");
       const existingId = form.getAttribute("data-fighter-id");
       const photoFile = fd.get("photo");
       let fighterId;
