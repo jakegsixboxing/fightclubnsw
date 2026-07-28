@@ -245,6 +245,55 @@ html.no-motion .hero .lede, html.no-motion .hero-ctas{ animation:none; opacity:1
 .hero-stat b{ display:block; font-family:'Oswald',sans-serif; font-weight:700; font-size:28px; color:var(--gold-bright); font-variant-numeric:tabular-nums; }
 .hero-stat span{ font-family:'Oswald',sans-serif; font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--grey); }
 
+/* ---------- Home page trio (What / Who / When) ---------- */
+.hero-inner-trio{ max-width:1180px; }
+.trio-lede{
+  margin:14px auto 44px; font-size:17px; color:var(--grey); max-width:640px;
+  opacity:0; animation:fadeUp .8s var(--ease) .3s forwards;
+}
+html.no-motion .trio-lede{ animation:none; opacity:1; }
+.trio-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:24px; align-items:start; text-align:left; }
+.trio-card.feature-card{ padding:0; }
+.trio-card .ficon{ margin:0; }
+.trio-toggle{
+  all:unset; box-sizing:border-box; cursor:pointer; display:block; width:100%;
+  padding:30px 56px 26px 26px; text-align:left; position:relative;
+}
+.trio-toggle:focus-visible{ outline:2px solid var(--gold-bright); outline-offset:-4px; border-radius:calc(var(--radius) - 4px); }
+.trio-num{
+  font-family:'Oswald',sans-serif; font-weight:700; font-size:12px; letter-spacing:.18em;
+  text-transform:uppercase; color:var(--gold); display:block; margin-bottom:14px;
+}
+.trio-title{ font-size:22px; margin:0 0 12px; }
+.trio-teaser{ color:var(--grey); font-size:15px; margin:0; }
+.trio-plus{
+  position:absolute; top:28px; right:24px; width:30px; height:30px; border:2px solid var(--gold-dark);
+  border-radius:50%; transition:transform .35s var(--ease), border-color .3s ease; flex-shrink:0;
+}
+.trio-plus::before, .trio-plus::after{ content:""; position:absolute; top:50%; left:50%; background:var(--gold-bright); transform:translate(-50%,-50%); }
+.trio-plus::before{ width:12px; height:2px; }
+.trio-plus::after{ width:2px; height:12px; }
+.trio-toggle[aria-expanded="true"] .trio-plus{ transform:rotate(135deg); border-color:var(--gold); }
+.trio-card:hover .trio-plus{ border-color:var(--gold); }
+.trio-panel{ max-height:0; overflow:hidden; transition:max-height .45s var(--ease); }
+html.no-motion .trio-panel{ transition:none; }
+.trio-panel-inner{ padding:0 26px 30px; }
+.trio-panel-inner p{ color:var(--grey); font-size:14.5px; margin:0 0 22px; }
+.trio-stats{ display:flex; gap:24px; flex-wrap:wrap; margin-bottom:22px; padding-top:18px; border-top:1px solid rgba(107,82,21,.35); }
+.trio-stats > div{ text-align:left; }
+.trio-stats b{ display:block; font-family:'Oswald',sans-serif; font-weight:700; font-size:21px; color:var(--gold-bright); font-variant-numeric:tabular-nums; }
+.trio-stats span{ font-family:'Oswald',sans-serif; font-size:10.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--grey); }
+.trio-link{
+  display:inline-flex; align-items:center; gap:6px; color:var(--gold-bright); font-family:'Oswald',sans-serif;
+  font-weight:600; font-size:13px; letter-spacing:.06em; text-transform:uppercase; text-decoration:none; transition:gap .25s ease, color .25s ease;
+}
+.trio-link svg{ width:15px; height:15px; }
+.trio-link:hover{ color:var(--gold); gap:10px; }
+.trio-cta{ margin-top:2px; }
+@media (max-width:900px){
+  .trio-grid{ grid-template-columns:1fr; }
+}
+
 /* ---------- Marquee ticker ---------- */
 .ticker{
   background:var(--bg2); border-top:1px solid rgba(107,82,21,.4); border-bottom:1px solid rgba(107,82,21,.4);
@@ -578,22 +627,65 @@ footer{ background:var(--bg2); border-top:1px solid var(--gold-dark); padding:64
 
 <section class="hero" id="top">
 <canvas id="hero-canvas"></canvas>
-<div class="hero-inner">
+<div class="hero-inner hero-inner-trio">
 <span class="eyebrow reveal">Fight Club Central Coast</span>
-<h1>
-<span class="kw"><span style="animation-delay:.05s">Fight</span></span> <span class="kw"><span style="animation-delay:.14s">Club</span></span><br>
-<span class="accent"><span class="kw"><span style="animation-delay:.24s">10</span></span> <span class="kw"><span style="animation-delay:.32s">Week</span></span> <span class="kw"><span style="animation-delay:.40s">Challenge</span></span></span>
-</h1>
-<p class="lede">Ten weeks of real boxing training that gets everyday people into the ring for a genuine first fight — a bucket-list moment, or the start of your boxing story. Train in-house at Legacy Gym, or through your own gym anywhere in NSW.</p>
-<div class="hero-ctas">
-<a class="btn btn-primary" href="https://fightclubnsw.vercel.app/#/signup"><span class="btn-shine"></span>Register for the Challenge</a>
-<a class="btn btn-secondary" href="https://fightclubnsw.vercel.app/#/login"><span class="btn-shine"></span>Log In</a>
+<p class="trio-lede reveal">Ten weeks of real boxing training that gets everyday people into the ring. Tap a box to see what's involved.</p>
+<div class="trio-grid reveal-stagger">
+
+<div class="trio-card feature-card" data-tilt>
+<button class="trio-toggle" type="button" aria-expanded="false" aria-controls="trio-panel-1" id="trio-btn-1">
+<span class="trio-num">01</span>
+<h2 class="trio-title">What's Fight Club?</h2>
+<p class="trio-teaser">A ten-week boxing challenge that takes everyday people from zero experience to a real fight night — Central Coast's longest-running combat sport program.</p>
+<span class="trio-plus" aria-hidden="true"></span>
+</button>
+<div class="trio-panel" id="trio-panel-1" role="region" aria-labelledby="trio-btn-1">
+<div class="trio-panel-inner">
+<p>At its heart, Fight Club is a big group of everyday local people training together, in-house, at Legacy Gym on the Central Coast — pushing together, sparring together, and fighting together on the same fight night. You train as one team for the first five weeks, building fundamentals and community, then split into smaller teams under individual coaches — still coming back together every week for sparring.</p>
+<div class="trio-stats">
+<div><b data-count="10" data-suffix="+">0</b><span>Years Running</span></div>
+<div><b data-count="1000" data-suffix="+">0</b><span>Graduates</span></div>
+<div><b data-count="400" data-suffix="+">0</b><span>Fight Night Crowd</span></div>
 </div>
-<div class="hero-badge-row">
-<div class="hero-stat"><b data-count="10" data-suffix="">0</b><span>Week Challenge</span></div>
-<div class="hero-stat"><b data-count="1000" data-suffix="+">0</b><span>Central Coast Graduates</span></div>
-<div class="hero-stat"><b data-count="400" data-suffix="+">0</b><span>Fight Night Crowd</span></div>
-<div class="hero-stat"><b>Fair</b><span>AI Matchmaking</span></div>
+<a class="trio-link" href="#program">See how training works<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+</div>
+</div>
+</div>
+
+<div class="trio-card feature-card" data-tilt>
+<button class="trio-toggle" type="button" aria-expanded="false" aria-controls="trio-panel-2" id="trio-btn-2">
+<span class="trio-num">02</span>
+<h2 class="trio-title">Who's Fight Club For?</h2>
+<p class="trio-teaser">Everyday people looking for a real challenge — no boxing experience needed, whatever your weight, skill, or fitness level.</p>
+<span class="trio-plus" aria-hidden="true"></span>
+</button>
+<div class="trio-panel" id="trio-panel-2" role="region" aria-labelledby="trio-btn-2">
+<div class="trio-panel-inner">
+<p>Most fighters walk in having never thrown a punch. Fight Club is built for people wanting to tick the ultimate bucket-list challenge off the list, find structure and confidence, or push themselves further than they thought they could — members consistently say it's done as much for their mental health and self-belief as it has for their boxing. Matches are made on real weight, skill, and mentality, so wherever you're starting from, you're matched fairly rather than thrown in the deep end. Train in-house at Legacy Gym on the Central Coast, or through your own gym anywhere in NSW.</p>
+<a class="trio-link" href="#paths">See how you can train<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+</div>
+</div>
+</div>
+
+<div class="trio-card feature-card" data-tilt>
+<button class="trio-toggle" type="button" aria-expanded="false" aria-controls="trio-panel-3" id="trio-btn-3">
+<span class="trio-num">03</span>
+<h2 class="trio-title">When's the Next Camp?</h2>
+<p class="trio-teaser">Week 1 starts Monday, 12 October 2026 — registration for this intake is open now.</p>
+<span class="trio-plus" aria-hidden="true"></span>
+</button>
+<div class="trio-panel" id="trio-panel-3" role="region" aria-labelledby="trio-btn-3">
+<div class="trio-panel-inner">
+<p>Ten weeks of training leads to Fight Night on Saturday, 19 December 2026 — a full show at our fully custom fight venue, with lights, music, an MC, a bar and food, in front of a live crowd.</p>
+<div class="trio-stats">
+<div><b>12 Oct</b><span>Week 1 Starts</span></div>
+<div><b>19 Dec</b><span>Fight Night 2026</span></div>
+</div>
+<a class="btn btn-primary trio-cta" href="https://fightclubnsw.vercel.app/#/signup"><span class="btn-shine"></span>Register for This Intake</a>
+</div>
+</div>
+</div>
+
 </div>
 </div>
 </section>
@@ -1005,6 +1097,29 @@ footer{ background:var(--bg2); border-top:1px solid var(--gold-dark); padding:64
   } else {
     document.querySelectorAll('.reveal, .reveal-stagger').forEach(function(el){ el.classList.add('in'); });
   }
+
+  /* ---------- Home trio accordion ---------- */
+  document.querySelectorAll('.trio-toggle').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var panel = document.getElementById(btn.getAttribute('aria-controls'));
+      if(!panel) return;
+      var isOpen = btn.getAttribute('aria-expanded') === 'true';
+      if(isOpen){
+        panel.style.maxHeight = panel.scrollHeight + 'px';
+        requestAnimationFrame(function(){ panel.style.maxHeight = '0px'; });
+        btn.setAttribute('aria-expanded', 'false');
+      } else {
+        panel.style.maxHeight = panel.scrollHeight + 'px';
+        btn.setAttribute('aria-expanded', 'true');
+      }
+    });
+  });
+  window.addEventListener('resize', function(){
+    document.querySelectorAll('.trio-toggle[aria-expanded="true"]').forEach(function(btn){
+      var panel = document.getElementById(btn.getAttribute('aria-controls'));
+      if(panel){ panel.style.maxHeight = panel.scrollHeight + 'px'; }
+    });
+  });
 
   /* ---------- Animated stat counters ---------- */
   function animateCount(el){
