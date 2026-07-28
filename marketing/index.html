@@ -178,10 +178,10 @@ header.scrolled .nav{ padding:10px 24px; }
 .brand-word{ font-family:'Cinzel',serif; font-weight:800; font-size:19px; letter-spacing:.05em; color:var(--cream); line-height:1.1; }
 .brand-word span{ color:var(--gold-bright); }
 .brand-sub{ font-family:'Oswald',sans-serif; font-size:10px; letter-spacing:.18em; text-transform:uppercase; color:var(--grey); }
-nav.links{ display:flex; align-items:center; gap:32px; }
+nav.links{ display:flex; align-items:center; gap:20px; flex-wrap:nowrap; }
 nav.links a.navlink{
-  font-family:'Oswald',sans-serif; font-size:13px; font-weight:600; letter-spacing:.06em; text-transform:uppercase;
-  color:var(--grey); transition:color .2s ease; position:relative; padding-bottom:4px;
+  font-family:'Oswald',sans-serif; font-size:12.5px; font-weight:600; letter-spacing:.05em; text-transform:uppercase;
+  color:var(--grey); transition:color .2s ease; position:relative; padding-bottom:4px; white-space:nowrap;
 }
 nav.links a.navlink::after{
   content:""; position:absolute; left:0; bottom:0; width:0; height:2px; background:var(--gold-bright);
@@ -381,6 +381,50 @@ html.no-motion .phone{ animation:none; }
 .app-grid{ display:grid; grid-template-columns:repeat(2, 1fr); gap:20px; text-align:left; }
 .app-cta{ text-align:center; margin-top:44px; }
 
+/* ---------- How Training Works: phases + weekly schedule ---------- */
+.phase-grid{ display:grid; grid-template-columns:1fr auto 1fr; gap:22px; align-items:center; margin-bottom:68px; }
+.phase-card .phase-num{ font-family:'Oswald',sans-serif; font-weight:700; font-size:12px; letter-spacing:.16em; text-transform:uppercase; color:var(--gold); display:block; margin-bottom:10px; }
+.phase-card h3{ font-size:20px; margin-bottom:10px; }
+.phase-card p{ color:var(--grey); font-size:14.5px; margin:0; }
+.phase-arrow{ display:flex; align-items:center; justify-content:center; color:var(--gold-dark); }
+.phase-arrow svg{ width:52px; height:52px; }
+.schedule-head{ text-align:center; margin-bottom:36px; }
+.schedule-head h3{ font-size:24px; }
+.schedule-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:20px; text-align:left; }
+.schedule-card .sch-day{ font-family:'Oswald',sans-serif; font-weight:700; font-size:12px; letter-spacing:.14em; text-transform:uppercase; color:var(--gold); display:block; margin-bottom:6px; }
+.schedule-card .sch-time{ font-family:'Oswald',sans-serif; font-weight:600; font-size:15px; color:var(--gold-bright); display:block; margin-bottom:10px; }
+.schedule-card p{ color:var(--grey); font-size:14px; margin:0; }
+
+/* ---------- Matchmaking & Transparency ---------- */
+.matching-layout{ display:grid; grid-template-columns:1fr 380px; gap:48px; align-items:start; }
+.matching-copy{ display:flex; flex-direction:column; gap:20px; }
+.pool-card{
+  background:radial-gradient(120% 140% at 30% 0%, var(--card-grad-top), var(--card-grad-bottom));
+  border:2px solid var(--gold-dark); border-radius:var(--radius); padding:28px 24px;
+}
+.pool-row{ margin-bottom:22px; }
+.pool-row:last-of-type{ margin-bottom:18px; }
+.pool-label{ font-family:'Oswald',sans-serif; font-weight:600; font-size:12px; letter-spacing:.08em; text-transform:uppercase; color:var(--grey); display:block; margin-bottom:10px; }
+.pool-dots{ display:flex; gap:8px; align-items:center; height:22px; }
+.pool-dot{ width:14px; height:14px; border-radius:50%; background:linear-gradient(180deg,var(--gold-bright),var(--gold-dark)); flex-shrink:0; animation:poolFloat 3.4s ease-in-out infinite; }
+.pool-dot.ghost{ background:rgba(169,164,154,.25); }
+.pool-dot:nth-child(2){ animation-delay:.3s; } .pool-dot:nth-child(3){ animation-delay:.6s; } .pool-dot:nth-child(4){ animation-delay:.9s; }
+.pool-dot:nth-child(5){ animation-delay:1.2s; } .pool-dot:nth-child(6){ animation-delay:1.5s; }
+@keyframes poolFloat{ 0%,100%{ transform:translateY(0); } 50%{ transform:translateY(-5px); } }
+html.no-motion .pool-dot{ animation:none; }
+.pool-live{ display:flex; align-items:center; gap:8px; font-family:'Oswald',sans-serif; font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--gold-bright); padding-top:14px; border-top:1px solid rgba(107,82,21,.4); }
+.pool-live-dot{ width:8px; height:8px; border-radius:50%; background:#4ade80; box-shadow:0 0 8px rgba(74,222,128,.7); animation:liveBlink 1.6s ease-in-out infinite; }
+@keyframes liveBlink{ 0%,100%{ opacity:1; } 50%{ opacity:.35; } }
+html.no-motion .pool-live-dot{ animation:none; }
+
+@media (max-width:1000px){ .matching-layout{ grid-template-columns:1fr; } }
+@media (max-width:900px){
+  .phase-grid{ grid-template-columns:1fr; }
+  .phase-arrow{ transform:rotate(90deg); margin:-6px auto; }
+  .schedule-grid{ grid-template-columns:repeat(2,1fr); }
+}
+@media (max-width:760px){ .schedule-grid{ grid-template-columns:1fr; } }
+
 /* ---------- 10-Week Challenge (scroll-fill line) ---------- */
 .camp{ }
 .timeline{ position:relative; max-width:900px; margin:0 auto; padding-left:0; }
@@ -461,10 +505,12 @@ footer{ background:var(--bg2); border-top:1px solid var(--gold-dark); padding:64
   section{ padding:72px 0; }
   .cursor-glow{ display:none; }
 }
-@media (max-width: 760px){
+@media (max-width: 1100px){
   nav.links{ display:none; }
   .hamburger{ display:flex; }
   .nav-actions .btn-secondary{ display:none; }
+}
+@media (max-width: 760px){
   .hero{ padding:90px 0 64px; min-height:auto; }
   .hero-badge-row{ gap:24px; }
   .footer-top{ flex-direction:column; }
@@ -503,6 +549,7 @@ footer{ background:var(--bg2); border-top:1px solid var(--gold-dark); padding:64
 
 <nav class="links">
 <a class="navlink" data-nav href="#about">About</a>
+<a class="navlink" data-nav href="#program">The Program</a>
 <a class="navlink" data-nav href="#paths">Ways to Join</a>
 <a class="navlink" data-nav href="#app">The App</a>
 <a class="navlink" data-nav href="#camp">10-Week Challenge</a>
@@ -519,6 +566,7 @@ footer{ background:var(--bg2); border-top:1px solid var(--gold-dark); padding:64
 </div>
 <div class="mobile-panel" id="mobilePanel">
 <a class="navlink" href="#about">About</a>
+<a class="navlink" href="#program">The Program</a>
 <a class="navlink" href="#paths">Ways to Join</a>
 <a class="navlink" href="#app">The App</a>
 <a class="navlink" href="#camp">10-Week Challenge</a>
@@ -615,6 +663,57 @@ footer{ background:var(--bg2); border-top:1px solid var(--gold-dark); padding:64
 </div>
 </section>
 
+<section class="program" id="program">
+<div class="wrap">
+<div class="section-head reveal">
+<span class="eyebrow">How Training Works</span>
+<h2>One team first. Then your team.</h2>
+<p class="lede">Fight Club runs in two phases across the ten weeks — one shared foundation, then sharper, smaller teams under your own coach.</p>
+</div>
+<div class="phase-grid reveal-stagger">
+<div class="feature-card phase-card" data-tilt>
+<span class="phase-num">Phase 01 — Weeks 1–5</span>
+<h3>One Team</h3>
+<p>Every fighter trains together as one big group — building fundamentals, footwork, and a shared sense of community from day one. This is where the team is really built.</p>
+</div>
+<div class="phase-arrow" aria-hidden="true">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="4" cy="12" r="2.4"/><path d="M6.4 12h6"/><circle cx="19" cy="5" r="2"/><circle cx="19" cy="12" r="2"/><circle cx="19" cy="19" r="2"/><path d="M12.4 12 17 5.6M12.4 12h4.6M12.4 12 17 18.4"/></svg>
+</div>
+<div class="feature-card phase-card" data-tilt>
+<span class="phase-num">Phase 02 — Weeks 5–10</span>
+<h3>Team Split</h3>
+<p>At the five-week mark, the group breaks into two or three smaller teams, each sharpening the specific skills and drills their coach decides they need. Everyone still comes back together each week for technical and open sparring.</p>
+</div>
+</div>
+<div class="schedule-head reveal">
+<span class="eyebrow">The Weekly Grind</span>
+<h3>A week inside Fight Club</h3>
+</div>
+<div class="schedule-grid reveal-stagger">
+<div class="feature-card schedule-card" data-tilt>
+<span class="sch-day">Monday</span>
+<span class="sch-time">Tech Sparring</span>
+<p>Light-to-moderate sparring broken into specific skill and drill work, targeting exactly what each fighter needs to improve.</p>
+</div>
+<div class="feature-card schedule-card" data-tilt>
+<span class="sch-day">Tuesday</span>
+<span class="sch-time">6:45pm — Skills &amp; Drills</span>
+<p>A participants-only session in a private area of the gym — attacking, defence, footwork, ring awareness, and more.</p>
+</div>
+<div class="feature-card schedule-card" data-tilt>
+<span class="sch-day">Wednesday</span>
+<span class="sch-time">Open Sparring</span>
+<p>Full open rounds — putting it all into play. Later in the program, sparring is pre-matched days in advance, so you know exactly who, how many rounds, and which ring.</p>
+</div>
+<div class="feature-card schedule-card" data-tilt>
+<span class="sch-day">Thursday</span>
+<span class="sch-time">6:45pm — Skills &amp; Drills</span>
+<p>A second private session each week, keeping the fundamentals sharp alongside your team.</p>
+</div>
+</div>
+</div>
+</section>
+
 <section class="paths" id="paths">
 <div class="wrap">
 <div class="section-head reveal">
@@ -641,6 +740,40 @@ footer{ background:var(--bg2); border-top:1px solid var(--gold-dark); padding:64
 </div>
 </div>
 <p class="paths-note reveal">Fight Club also supports fighters building a competitive amateur or professional record through the same app — that path is coming soon.</p>
+</div>
+</section>
+
+<section class="matching" id="matching">
+<div class="wrap">
+<div class="section-head reveal">
+<span class="eyebrow">Matchmaking &amp; Transparency</span>
+<h2>Nothing hidden. Ever.</h2>
+<p class="lede">Matches are built on real weight class, real skill level, and real mentality — not decided on day one, and never hidden from the people it affects most.</p>
+</div>
+<div class="matching-layout">
+<div class="matching-copy reveal-stagger">
+<div class="feature-card" data-tilt><span class="tag">Live Weight Pools</span><p>Every fighter's profile sits in the app under their weight class. Pools form almost instantly and shift in real time as weights change, skill levels separate, or participants drop out.</p></div>
+<div class="feature-card" data-tilt><span class="tag">Complete Transparency</span><p>You can see everyone in your division and follow their journey week to week — nothing about the matching process is hidden from participants.</p></div>
+<div class="feature-card" data-tilt><span class="tag">Built For Safety</span><p>Matches are made on real weight, skill, and mentality. The goal is the best possible experience for every fighter — never a mismatch, never unnecessary risk.</p></div>
+</div>
+<div class="pool-visual reveal">
+<div class="pool-card">
+<div class="pool-row">
+<span class="pool-label">Featherweight</span>
+<div class="pool-dots"><div class="pool-dot"></div><div class="pool-dot"></div><div class="pool-dot"></div><div class="pool-dot ghost"></div></div>
+</div>
+<div class="pool-row">
+<span class="pool-label">Welterweight</span>
+<div class="pool-dots"><div class="pool-dot"></div><div class="pool-dot"></div><div class="pool-dot ghost"></div><div class="pool-dot ghost"></div><div class="pool-dot"></div></div>
+</div>
+<div class="pool-row">
+<span class="pool-label">Middleweight</span>
+<div class="pool-dots"><div class="pool-dot"></div><div class="pool-dot ghost"></div><div class="pool-dot"></div></div>
+</div>
+<div class="pool-live"><span class="pool-live-dot"></span> Illustrative — pools update in real time in the app</div>
+</div>
+</div>
+</div>
 </div>
 </section>
 
@@ -708,8 +841,8 @@ footer{ background:var(--bg2); border-top:1px solid var(--gold-dark); padding:64
 <div class="tl-item">
 <div class="tl-dot"></div>
 <span class="tl-week">Weeks 5–8 — Sharpen</span>
-<h3>Sparring and fight-specific prep</h3>
-<p>Training sharpens toward fight night — sparring, tactics, and weight management ramp up. Multiple communal sparring days and competition sparring events run through this stretch to find your fairest possible match. Training out of Sydney or Newcastle? A Fight Club rep comes to a local sparring day to watch and film you instead, and you can upload sparring footage through the app too.</p>
+<h3>Now split into your team</h3>
+<p>Fresh off the five-week mark, you're now training in your smaller team under your coach — sharpening the specific skills they've identified for you. The whole group still comes back together each week for technical and open sparring, so matches keep sharpening toward your fairest possible pairing. Training out of Sydney or Newcastle? A Fight Club rep comes to a local sparring day to watch and film you instead, and you can upload sparring footage through the app too.</p>
 </div>
 <div class="tl-item">
 <div class="tl-dot"></div>
@@ -733,7 +866,7 @@ footer{ background:var(--bg2); border-top:1px solid var(--gold-dark); padding:64
 <div class="nights-card reveal">
 <span class="eyebrow">Next Intake</span>
 <h3>Week 1 starts Monday, 12 October 2026</h3>
-<p>Ten weeks of training leads to Fight Night on Saturday, 19 December 2026, at our fully custom fight venue in front of a live crowd. Registration for this intake is opening now.</p>
+<p>Ten weeks of training leads to Fight Night on Saturday, 19 December 2026 — a full show at our fully custom fight venue, with lights, music, an MC, a bar and food, in front of a live crowd. By the end of the night you'll have recorded your first official bout, joining the 1% club of people worldwide who've ever stepped into a sanctioned combat sport. Registration for this intake is opening now.</p>
 <div class="countdown" id="countdown" data-target="2026-12-19T18:00:00+11:00">
 <div class="cd-box"><b id="cdDays">00</b><span>Days</span></div>
 <div class="cd-box"><b id="cdHours">00</b><span>Hours</span></div>
@@ -766,6 +899,7 @@ footer{ background:var(--bg2); border-top:1px solid var(--gold-dark); padding:64
 <div class="footer-col">
 <h4>Fight Club</h4>
 <a href="#about">What Is Fight Club</a>
+<a href="#program">The Program</a>
 <a href="#paths">Ways to Join</a>
 <a href="#app">The App</a>
 <a href="#camp">10-Week Challenge</a>
