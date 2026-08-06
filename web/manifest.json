@@ -1,13 +1,13 @@
 {
-  "name": "Fight Club Central Coast",
-  "short_name": "Fight Club",
-  "description": "Fight Club Central Coast — honest Central Coast boxing. Real records, fair fights, both fighters agree.",
-  "start_url": "/",
-  "display": "standalone",
-  "background_color": "#0a0a0a",
-  "theme_color": "#0a0a0a",
-  "icons": [
-    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
-    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" }
-  ]
+    "name": "Fighter Hub — Fight Club Central Coast",
+    "short_name": "Fighter Hub",
+    "description": "Fighter Hub — the roster, matchups, training log, nutrition and coach reviews for Fight Club Central Coast.",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#0a0a0a",
+    "theme_color": "#0a0a0a",
+    "icons": [
+          { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
+          { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" }
+    ]
 }
