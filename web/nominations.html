@@ -455,7 +455,10 @@ window.doRegister = async function(){
     const fid = inserted.id;
 
     const path = `fighters/fighter-${fid}.jpg`;
-    const { error: upErr } = await sb.storage.from('pf-photos').upload(path, photoBlob, { upsert: true, contentType: 'image/jpeg' });
+    let { error: upErr } = await sb.storage.from('pf-photos').upload(path, photoBlob, { contentType: 'image/jpeg' });
+    if (upErr && /exist/i.test(upErr.message || '')){
+      ({ error: upErr } = await sb.storage.from('pf-photos').update(path, photoBlob, { contentType: 'image/jpeg' }));
+    }
     if (!upErr){
       const publicUrl = `${SUPABASE_URL}/storage/v1/object/public/pf-photos/${path}?v=${Date.now()}`;
       await sb.from('pf_fighters').update({ photo_path: publicUrl }).eq('id', fid);
