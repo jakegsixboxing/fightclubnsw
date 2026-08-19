@@ -143,7 +143,8 @@
   .cornerTag { font-size:9px; font-weight:800; letter-spacing:2px; text-transform:uppercase; margin-bottom:10px; }
   .boutFighter.red .cornerTag { color:#e05a5a; }
   .boutFighter.blue .cornerTag { color:#6f9fe8; }
-  .boutPhoto { width:128px; height:128px; border-radius:16px; object-fit:cover; margin:0 auto 14px; display:block; background:#050505; }
+  .boutPhotoWrap { position:relative; width:fit-content; margin:0 auto 20px; }
+  .boutPhoto { width:128px; height:128px; border-radius:16px; object-fit:cover; margin:0 auto; display:block; background:#050505; }
   .boutPhoto { border:2px solid var(--gold); box-shadow: 0 0 0 1px #000, 0 0 26px -8px rgba(217,174,69,0.45), 0 14px 28px -12px rgba(0,0,0,0.9); }
   .boutPhotoBlank { display:flex; align-items:center; justify-content:center; font-weight:800; font-size:28px; color:var(--gold-soft); }
   .boutName { font-family:'Anton','Poppins',system-ui,sans-serif; font-weight:400; font-size:19px; letter-spacing:1.2px; text-transform:uppercase; margin:0 0 6px; line-height:1.15; text-shadow: 0 2px 0 rgba(0,0,0,0.55); }
@@ -153,7 +154,8 @@
   @media (max-width: 480px){
     .bout { padding: 26px 14px 24px; border-radius: 20px; }
     .boutGrid { grid-template-columns: 1fr 48px 1fr; }
-    .boutPhoto { width: 100%; max-width: 114px; height: auto; aspect-ratio: 1 / 1; }
+    .boutPhotoWrap { width: 114px; max-width: 100%; }
+    .boutPhoto { width: 100%; height: auto; aspect-ratio: 1 / 1; }
     .boutPhotoBlank { min-height: 100px; }
     .boutVs { width: 46px; height: 46px; font-size: 16px; margin-top: 44px; }
   }
@@ -273,9 +275,11 @@
         <div class="fGroup"><label>Fighter Mobile *</label><input id="rMob" inputmode="tel" /></div>
         <div class="fGroup"><label>Date of Birth *</label><input id="rDob" type="date" /></div>
       </div>
-      <div class="fRow">
-        <div class="fGroup"><label>Combat Sports NSW Number</label><input id="rCsa" placeholder="If registered" /></div>
-        <div class="fGroup"></div>
+      <div id="csaWrap" style="display:none;">
+        <div class="fRow">
+          <div class="fGroup"><label>Combat Sports NSW Number</label><input id="rCsa" placeholder="If registered" /></div>
+          <div class="fGroup"></div>
+        </div>
       </div>
       <div class="fGroup" style="margin-bottom:14px;">
         <label>Boxer Type *</label>
@@ -588,6 +592,7 @@ window.openEditProfile = async function(){
   document.getElementById('rMob').value = me.mobile || '';
   document.getElementById('rDob').value = me.date_of_birth || '';
   document.getElementById('rCsa').value = me.combat_sports_number || '';
+  document.getElementById('csaWrap').style.display = 'block'; // CSA added later via Edit Profile
   document.getElementById('rW').value = me.wins ?? 0;
   document.getElementById('rL').value = me.losses ?? 0;
   document.getElementById('rD').value = me.draws ?? 0;
@@ -623,6 +628,7 @@ window.exitEditProfile = function(){
   editMode = false;
   photoBlob = null;
   hideErr('regErr');
+  document.getElementById('csaWrap').style.display = 'none';
   document.getElementById('regTitle').textContent = 'Fighter Nomination';
   document.getElementById('regSub').textContent = 'Amateur & professional boxers — build your fighter profile for Clash on the Coast — Sat 10 October.';
   document.getElementById('loginFieldsWrap').style.display = '';
@@ -889,8 +895,13 @@ async function loadRoster(){
 
 function boutPhotoById(id, initials){
   const f = (window.__flatById || {})[id];
-  if (f && f.photo_path) return `<img class="boutPhoto" src="${f.photo_path}" alt="" onerror="this.classList.add('boutPhotoBlank'); this.outerHTML='<div class=&quot;boutPhoto boutPhotoBlank&quot;>${initials}</div>'">`;
-  return `<div class="boutPhoto boutPhotoBlank">${initials}</div>`;
+  const badge = f && f.boxer_type
+    ? `<span class="dvBadge">${f.boxer_type === 'professional' ? 'Professional Boxer' : 'Amateur Boxer'}</span>`
+    : '';
+  const photo = (f && f.photo_path)
+    ? `<img class="boutPhoto" src="${f.photo_path}" alt="" onerror="this.classList.add('boutPhotoBlank'); this.outerHTML='<div class=&quot;boutPhoto boutPhotoBlank&quot;>${initials}</div>'">`
+    : `<div class="boutPhoto boutPhotoBlank">${initials}</div>`;
+  return `<div class="boutPhotoWrap">${photo}${badge}</div>`;
 }
 
 function boutFighterHtml(id, name, wins, losses, draws, gym, division, confirmed, corner){
