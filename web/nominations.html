@@ -150,6 +150,13 @@
   .boutRecord { font-size:18px; font-weight:800; color:var(--gold); margin:0 0 6px; letter-spacing:1px; }
   .boutMeta { font-size:11px; color:var(--steel); line-height:1.55; }
   .boutVs { align-self:center; justify-self:center; width:58px; height:58px; border-radius:50%; background: linear-gradient(160deg, #ecc76a, #b8912c); color:#100c00; font-family:'Anton','Poppins',system-ui,sans-serif; font-size:19px; display:flex; align-items:center; justify-content:center; box-shadow: 0 0 0 3px #0a0a09, 0 0 0 5px rgba(217,174,69,0.5), 0 8px 22px -6px rgba(0,0,0,0.9); margin-top:48px; }
+  @media (max-width: 480px){
+    .bout { padding: 26px 14px 24px; border-radius: 20px; }
+    .boutGrid { grid-template-columns: 1fr 48px 1fr; }
+    .boutPhoto { width: 100%; max-width: 114px; height: auto; aspect-ratio: 1 / 1; }
+    .boutPhotoBlank { min-height: 100px; }
+    .boutVs { width: 46px; height: 46px; font-size: 16px; margin-top: 44px; }
+  }
   .boutAccepted { display:inline-block; color:var(--green); font-size:10px; font-weight:800; letter-spacing:1.5px; margin-top:10px; text-transform:uppercase; border:1px solid rgba(76,175,125,0.5); border-radius:999px; padding:5px 12px; background:rgba(76,175,125,0.08); }
   .boutFooter { text-align:center; margin-top:24px; font-size:11.5px; color: var(--steel); position:relative; z-index:1; }
   .matchActions { display:flex; justify-content:center; gap:12px; margin-top:20px; }
