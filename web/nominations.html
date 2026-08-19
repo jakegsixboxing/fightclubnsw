@@ -716,6 +716,7 @@ window.doLogout = async function(){
 let myFighterId = null;
 
 let isAdmin = false;
+let adminFighters = [];
 
 async function enterApp(){
   showScreen('app');
@@ -767,8 +768,73 @@ async function loadAdmin(){
     }
   } catch(e){ /* messages table optional */ }
 
+  /* ---- match maker: create + manage offers ---- */
+  adminFighters = data.filter(f => f.id !== 5);
+  let eventsList = [];
+  try {
+    const { data: evs } = await sb.from('pf_events').select('id, title, event_date').order('event_date', { ascending: false });
+    eventsList = evs || [];
+  } catch(e){}
+  let adminMatches = [];
+  try {
+    const { data: ms } = await sb.from('pf_matches_flat').select('*')
+      .not('status', 'eq', 'cancelled')
+      .order('created_at', { ascending: false });
+    adminMatches = ms || [];
+  } catch(e){}
+  window.__adminMatches = adminMatches;
+
+  const fOpt = f => {
+    const divs = DIVISIONS[f.boxer_type] || [];
+    const d = divs.find(x => x.id === f.weight_division_id);
+    const bits = [f.boxer_type === 'professional' ? 'Pro' : 'Amateur', d ? d.name : null, f.gym_name].filter(Boolean).join(' · ');
+    return `<option value="${f.id}">${esc(f.full_name)} — ${esc(bits)}</option>`;
+  };
+  const mmHtml = `
+  <div style="max-width:720px; margin:0 auto 30px;">
+    <h3 style="font-family:Oswald,sans-serif; color:var(--gold); letter-spacing:2px; text-transform:uppercase; font-size:15px;">Match Maker</h3>
+    <div class="fightCard">
+      <div class="fRow">
+        <div class="fGroup"><label style="color:#e05a5a;">Red Corner</label>
+          <select id="mmA" onchange="admRenderPreview()"><option value="">Select fighter…</option>${adminFighters.map(fOpt).join('')}</select></div>
+        <div class="fGroup"><label style="color:#6f9fe8;">Blue Corner</label>
+          <select id="mmB" onchange="admRenderPreview()"><option value="">Select fighter…</option>${adminFighters.map(fOpt).join('')}</select></div>
+      </div>
+      <div class="fRow single"><div class="fGroup"><label>Event</label>
+        <select id="mmEvent">${eventsList.map(e => `<option value="${e.id}">${esc(e.title)} — ${esc(e.event_date)}</option>`).join('')}</select></div></div>
+      <div id="mmPreview"></div>
+      <div class="errBox" id="mmErr" style="display:none;"></div>
+      <div style="margin-top:14px;"><button class="btn solid" id="mmSendBtn" style="width:100%;" onclick="admCreateMatch()">Send Fight Offer &rarr;</button></div>
+    </div>
+  </div>`;
+
+  const chip = (label, color) => `<span style="display:inline-block; border:1px solid ${color}; color:${color}; border-radius:8px; padding:4px 8px; font-size:10px; font-weight:700; letter-spacing:1px; text-transform:uppercase; margin-right:6px;">${label}</span>`;
+  const respChip = (name, r) => {
+    const c = r === 'accepted' ? 'var(--green)' : (r === 'declined' ? '#e05a5a' : 'var(--steel)');
+    return chip(`${esc((name||'').split(' ')[0])}: ${r}`, c);
+  };
+  const mmListHtml = `
+  <div style="max-width:720px; margin:0 auto 30px;">
+    <h3 style="font-family:Oswald,sans-serif; color:var(--gold); letter-spacing:2px; text-transform:uppercase; font-size:15px;">Offers &amp; Matches</h3>
+    ${adminMatches.length ? adminMatches.map(m => `
+    <div class="fightCard" style="margin-bottom:14px; ${m.status === 'confirmed' ? 'border-color: rgba(76,175,125,0.6);' : ''}">
+      <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap;">
+        <b style="font-family:Oswald,sans-serif; letter-spacing:1px; text-transform:uppercase;">${esc(m.a_name)} vs ${esc(m.b_name)}</b>
+        ${m.status === 'confirmed' ? chip('Locked In', 'var(--green)') : (m.status === 'declined' ? chip('Declined', '#e05a5a') : (m.a_response === 'accepted' && m.b_response === 'accepted' ? chip('Both Accepted', 'var(--green)') : chip('Offer Sent', 'var(--gold)')))}
+      </div>
+      <div style="margin-top:10px; color:var(--steel); font-size:12px;">${esc(m.event_title || '')} &middot; ${esc(m.event_date || '')}</div>
+      <div style="margin-top:10px;">${respChip(m.a_name, m.a_response)}${respChip(m.b_name, m.b_response)}</div>
+      <div style="margin-top:12px; display:flex; gap:10px; flex-wrap:wrap;">
+        ${m.status !== 'confirmed' && m.status !== 'declined' && m.a_response === 'accepted' && m.b_response === 'accepted'
+          ? `<button class="btn solid" onclick="admConfirmMatch(${m.id})">Move to Matched Fights &rarr;</button>` : ''}
+        ${m.status !== 'confirmed'
+          ? `<button class="btn ghost" onclick="admWithdrawMatch(${m.id})">${m.status === 'declined' ? 'Remove' : 'Withdraw Offer'}</button>` : ''}
+      </div>
+    </div>`).join('') : '<div class="emptyState">No offers yet — pair two fighters above to send the first one.</div>'}
+  </div>`;
+
   el.className = '';
-  el.innerHTML = threadsHtml + '<div style="max-width:720px; margin:0 auto;">' + data.map(f => `
+  el.innerHTML = mmHtml + mmListHtml + threadsHtml + '<div style="max-width:720px; margin:0 auto;">' + data.map(f => `
     <div class="fightCard" style="margin-bottom:20px;">
       <div class="fcBanner">
         <span class="fcDiv">${f.boxer_type === 'professional' ? 'Pro' : f.boxer_type === 'amateur' ? 'Amateur' : 'Challenger'} &middot; Full Record</span>
@@ -939,7 +1005,11 @@ function matchCardHtml(m, kind){
                <button class="btn solid" onclick="respondMatch(${m.id}, 'accepted')">Accept Fight</button>
                <button class="btn ghost" onclick="respondMatch(${m.id}, 'declined')">Decline</button>
              </div>`
-          : '<div class="boutFooter">Waiting on fighter approval</div>')}
+          : (m.a_response === 'accepted' && m.b_response === 'accepted'
+              ? '<div class="boutFooter">Both fighters accepted &middot; waiting on Legacy to lock it in</div>'
+              : (isMine && myResponse === 'accepted'
+                  ? '<div class="boutFooter">You accepted &middot; waiting on your opponent</div>'
+                  : '<div class="boutFooter">Waiting on fighter approval</div>')))}
   </div>`;
 }
 
@@ -1038,6 +1108,91 @@ window.respondMatch = async function(matchId, response){
   const { error } = await sb.rpc('pf_respond_to_match', { p_match_id: matchId, p_response: response });
   if (error) { alert('Couldn’t save your response: ' + error.message); return; }
   loadMatches();
+};
+
+/* ---------- admin match maker ---------- */
+function admDivLabelFor(f){
+  const d = (DIVISIONS[f.boxer_type] || []).find(x => x.id === f.weight_division_id);
+  return d ? divLabel(d) : '';
+}
+
+window.admRenderPreview = function(){
+  const aId = parseInt(document.getElementById('mmA').value || '0', 10);
+  const bId = parseInt(document.getElementById('mmB').value || '0', 10);
+  const box = document.getElementById('mmPreview');
+  document.getElementById('mmErr').style.display = 'none';
+  if (!aId || !bId){ box.innerHTML = ''; return; }
+  const A = adminFighters.find(f => f.id === aId), B = adminFighters.find(f => f.id === bId);
+  if (!A || !B){ box.innerHTML = ''; return; }
+  const side = (f, corner) => {
+    const initials = (f.full_name||'?').split(/\s+/).map(w=>w[0]).join('').slice(0,2).toUpperCase();
+    const badge = `<span class="dvBadge">${f.boxer_type === 'professional' ? 'Professional Boxer' : 'Amateur Boxer'}</span>`;
+    const photo = f.photo_path
+      ? `<img class="boutPhoto" src="${f.photo_path}" alt="">`
+      : `<div class="boutPhoto boutPhotoBlank">${initials}</div>`;
+    return `
+      <div class="boutFighter ${corner}">
+        <div class="cornerTag">${corner === 'red' ? 'Red Corner' : 'Blue Corner'}</div>
+        <div class="boutPhotoWrap">${photo}${badge}</div>
+        <p class="boutName">${f.full_name}</p>
+        <div class="boutRecord">${f.wins}&ndash;${f.losses}${f.draws ? '&ndash;' + f.draws : ''}</div>
+        <div class="boutMeta">${admDivLabelFor(f)}${f.gym_name ? '<br>' + f.gym_name : ''}</div>
+      </div>`;
+  };
+  const warn = aId === bId ? '' : (A.boxer_type !== B.boxer_type
+    ? '<div style="color:#e0b25a; font-size:12px; margin-top:10px; text-align:center;">&#9888; One fighter is amateur and one is professional — double-check this pairing.</div>' : '');
+  box.innerHTML = `
+    <div style="margin-top:16px; border:1px solid rgba(217,174,69,0.35); border-radius:16px; padding:18px 10px 14px;">
+      <div class="boutGrid">${side(A,'red')}<div class="boutVs">VS</div>${side(B,'blue')}</div>
+      ${warn}
+    </div>`;
+};
+
+window.admCreateMatch = async function(){
+  const errEl = document.getElementById('mmErr');
+  errEl.style.display = 'none';
+  const aId = parseInt(document.getElementById('mmA').value || '0', 10);
+  const bId = parseInt(document.getElementById('mmB').value || '0', 10);
+  const eventId = parseInt(document.getElementById('mmEvent').value || '0', 10);
+  const fail = msg => { errEl.textContent = msg; errEl.style.display = 'block'; };
+  if (!aId || !bId) return fail('Pick a fighter for both corners.');
+  if (aId === bId) return fail('A fighter can’t be matched against themselves.');
+  if (!eventId) return fail('Pick an event.');
+  const dupe = (window.__adminMatches || []).find(m =>
+    ['proposed','agreed','confirmed'].includes(m.status) &&
+    ((m.fighter_a_id === aId && m.fighter_b_id === bId) || (m.fighter_a_id === bId && m.fighter_b_id === aId)));
+  if (dupe) return fail('These two already have an active offer or match.');
+
+  const btn = document.getElementById('mmSendBtn');
+  btn.disabled = true; btn.textContent = 'Sending offer…';
+  try {
+    const { data: authData } = await sb.auth.getUser();
+    const { error } = await sb.from('pf_matches').insert({
+      fighter_a_id: aId, fighter_b_id: bId, event_id: eventId,
+      status: 'proposed', a_response: 'pending', b_response: 'pending',
+      proposed_by: authData && authData.user ? authData.user.id : null,
+    });
+    if (error) throw new Error(error.message);
+    loadMatches();
+    await loadAdmin();
+  } catch(e){
+    fail('Couldn’t send the offer: ' + (e.message || 'try again'));
+    btn.disabled = false; btn.textContent = 'Send Fight Offer →';
+  }
+};
+
+window.admConfirmMatch = async function(matchId){
+  const { error } = await sb.from('pf_matches').update({ status: 'confirmed', updated_at: new Date().toISOString() }).eq('id', matchId);
+  if (error) { alert('Couldn’t lock in the match: ' + error.message); return; }
+  loadMatches();
+  await loadAdmin();
+};
+
+window.admWithdrawMatch = async function(matchId){
+  const { error } = await sb.from('pf_matches').update({ status: 'cancelled', updated_at: new Date().toISOString() }).eq('id', matchId);
+  if (error) { alert('Couldn’t withdraw the offer: ' + error.message); return; }
+  loadMatches();
+  await loadAdmin();
 };
 
 /* ---------- boot ---------- */
