@@ -7,7 +7,7 @@
 <link rel="icon" href="favicon-32.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Anton&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Anton&family=Oswald:wght@600;700&display=swap" rel="stylesheet">
 <style>
   :root {
     --gold: #d9ae45; --gold-soft: rgba(217,174,69,0.35); --gold-dim: rgba(217,174,69,0.12);
@@ -103,23 +103,29 @@
   .youTag { font-size:9.5px; font-weight:800; letter-spacing:1px; padding:3px 9px; border-radius:999px;
     background: var(--gold); color:#100c00; }
 
-  .grid { display:grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-bottom: 26px; }
-  @media (max-width:640px){ .grid{ grid-template-columns:1fr; } }
-  .card {
-    position:relative; overflow:hidden;
-    background: linear-gradient(165deg, #16181a, #08080700 60%), var(--panel);
-    border: 2px solid rgba(176,183,190,0.75); border-radius: 18px; padding: 22px;
-    display:flex; align-items:center; gap:16px;
-    box-shadow: 0 12px 26px -18px rgba(176,183,190,0.55), inset 0 0 0 1px rgba(176,183,190,0.08);
-  }
-  .card.pro { border-color: var(--gold); background: linear-gradient(165deg, #1a170d, #08080700 60%), var(--panel);
-    box-shadow: 0 12px 26px -18px rgba(217,174,69,0.75), inset 0 0 0 1px rgba(217,174,69,0.08); }
-  .cardPhoto { width:74px; height:74px; border-radius:50%; object-fit:cover; background:#050505; border:3px solid var(--gold); box-shadow: 0 0 0 1px #000, 0 8px 18px -8px rgba(0,0,0,0.9); flex-shrink:0; }
-  .cardPhotoBlank { width:74px; height:74px; border-radius:50%; background: radial-gradient(circle at 35% 30%, #1c1a12, #0a0a09); display:flex; align-items:center; justify-content:center; border:1px dashed rgba(176,183,190,0.4); font-weight:800; color: var(--steel-soft); font-size:18px; flex-shrink:0; }
-  .card.pro .cardPhotoBlank { border-color: rgba(217,174,69,0.4); color: var(--gold-soft); }
-  .cardBody { flex:1; min-width:0; }
-  .cardName { font-size:16px; font-weight:700; margin:0 0 4px; }
-  .cardMeta { font-size:11.5px; color: var(--steel); display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+  .grid { display:grid; grid-template-columns: 1fr; gap: 22px; margin-bottom: 26px; max-width:720px; margin-left:auto; margin-right:auto; }
+  .fightCard { position:relative; overflow:hidden;
+    background: linear-gradient(150deg, rgba(29,26,18,0.98) 0%, rgba(17,16,19,0.99) 55%, rgba(11,11,12,1) 100%);
+    border: 1.5px solid var(--gold); border-radius: 18px; padding: 22px; }
+  .fcGhost { position:absolute; top:6px; right:-6px; font-family:'Anton','Oswald',sans-serif; font-size:76px;
+    letter-spacing:6px; color: rgba(217,174,69,0.06); pointer-events:none; user-select:none; line-height:1; }
+  .fcBanner { display:flex; align-items:center; justify-content:space-between; gap:8px; margin:-22px -22px 20px;
+    padding: 11px 22px; background: rgba(217,174,69,0.08); border-bottom: 1px solid rgba(217,174,69,0.45); position:relative; }
+  .fcDiv { font-family:'Oswald',sans-serif; font-size:12px; font-weight:600; letter-spacing:3px; text-transform:uppercase; color: var(--gold); }
+  .fcTop { display:flex; gap:18px; align-items:center; position:relative; }
+  .fcPhotoWrap { position:relative; flex-shrink:0; }
+  .fcPhoto { width:106px; height:106px; border-radius:14px; object-fit:cover; border:2px solid var(--gold); display:block; background:#0a0a09; }
+  .fcPhotoEmpty { display:flex; align-items:center; justify-content:center; background:#141414; color:var(--gold); font-size:30px; font-weight:800; }
+  .dvBadge { position:absolute; bottom:-10px; left:50%; transform:translateX(-50%); border-radius:8px; padding:5px 9px;
+    font-family:'Oswald',sans-serif; font-size:8px; font-weight:600; letter-spacing:1.2px; line-height:1; white-space:nowrap;
+    text-transform:uppercase; color: var(--gold); border:1px solid var(--gold);
+    background: linear-gradient(135deg, rgba(20,20,22,0.9), rgba(20,20,22,0.75)); }
+  .fcName { font-family:'Oswald',sans-serif; font-size:24px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; line-height:1.1; margin:0; color:var(--white); }
+  .fcMeta { color: var(--steel); font-size:12.5px; margin-top:5px; letter-spacing:.5px; }
+  .fcRecordRow { display:grid; grid-template-columns: repeat(3, 1fr); gap:10px; margin-top:20px; position:relative; }
+  .fcRec { background: rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.09); border-radius:12px; text-align:center; padding:14px 2px 11px; }
+  .fcRec span { display:block; font-size:26px; font-weight:800; color:var(--white); line-height:1; }
+  .fcRec small { display:block; margin-top:6px; font-size:9.5px; font-weight:700; letter-spacing:2px; text-transform:uppercase; color:var(--steel); }
 
   .bout { position:relative; background: linear-gradient(180deg, rgba(20,19,16,0.97), rgba(9,9,8,0.99)); border:2px solid rgba(217,174,69,0.55); border-radius:24px; padding: 32px 22px 28px; margin: 0 auto 30px; max-width:720px; box-shadow: 0 24px 50px -24px rgba(0,0,0,0.95), inset 0 0 0 1px rgba(0,0,0,0.6); overflow:hidden; }
   .bout::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; background: linear-gradient(90deg, transparent, var(--gold), transparent); }
@@ -135,8 +141,8 @@
   .cornerTag { font-size:9px; font-weight:800; letter-spacing:2px; text-transform:uppercase; margin-bottom:10px; }
   .boutFighter.red .cornerTag { color:#e05a5a; }
   .boutFighter.blue .cornerTag { color:#6f9fe8; }
-  .boutPhoto { width:132px; height:132px; border-radius:50%; object-fit:cover; margin:0 auto 14px; display:block; background:#050505; }
-  .boutPhoto { border:4px solid var(--gold); box-shadow: 0 0 0 2px #000, 0 0 30px -8px rgba(217,174,69,0.5), 0 14px 28px -12px rgba(0,0,0,0.9); }
+  .boutPhoto { width:128px; height:128px; border-radius:16px; object-fit:cover; margin:0 auto 14px; display:block; background:#050505; }
+  .boutPhoto { border:2px solid var(--gold); box-shadow: 0 0 0 1px #000, 0 0 26px -8px rgba(217,174,69,0.45), 0 14px 28px -12px rgba(0,0,0,0.9); }
   .boutPhotoBlank { display:flex; align-items:center; justify-content:center; font-weight:800; font-size:28px; color:var(--gold-soft); }
   .boutName { font-family:'Anton','Poppins',system-ui,sans-serif; font-weight:400; font-size:19px; letter-spacing:1.2px; text-transform:uppercase; margin:0 0 6px; line-height:1.15; text-shadow: 0 2px 0 rgba(0,0,0,0.55); }
   .boutRecord { font-size:18px; font-weight:800; color:var(--gold); margin:0 0 6px; letter-spacing:1px; }
@@ -558,7 +564,7 @@ async function loadRoster(){
   }
 
   const { data: flat, error: flatErr } = await sb.from('pf_fighters_flat')
-    .select('id, full_name, photo_path, gym_name, boxer_type, wins, losses, draws, division_label')
+    .select('id, full_name, photo_path, gym_name, boxer_type, wins, losses, draws, division_label, stance, date_of_birth')
     .in('id', ids)
     .order('updated_at', { ascending: false });
   if (flatErr){ rosterEl.textContent = 'Couldn’t load fighters — try again shortly.'; return; }
@@ -577,20 +583,35 @@ async function loadRoster(){
   rosterEl.className = 'grid';
   rosterEl.innerHTML = sorted.map(f => {
     const pro = f.boxer_type === 'professional';
-    const initials = f.full_name.split(/\s+/).map(w => w[0]).join('').slice(0,2).toUpperCase();
+    const initial = (f.full_name||'?').trim()[0] || '?';
     const photo = f.photo_path
-      ? `<img class="cardPhoto" src="${f.photo_path}" alt="" onerror="this.outerHTML='<div class=cardPhotoBlank>${initials}</div>'">`
-      : `<div class="cardPhotoBlank">${initials}</div>`;
+      ? `<img class="fcPhoto" src="${f.photo_path}" alt="" onerror="this.outerHTML='<div class=&quot;fcPhoto fcPhotoEmpty&quot;>${initial}</div>'">`
+      : `<div class="fcPhoto fcPhotoEmpty">${initial}</div>`;
+    const age = f.age ? f.age + ' yrs' : (f.date_of_birth ? Math.floor((Date.now() - new Date(f.date_of_birth).getTime()) / 31557600000) + ' yrs' : '');
+    const meta = [f.division_label ? f.division_label.replace(/\s*\(.*\)$/, '') : '', f.stance || '', age, f.current_weight ? f.current_weight + 'kg now' : '']
+      .filter(Boolean).join(' &middot; ');
     return `
-    <div class="card ${pro ? 'pro' : ''}">
-      ${photo}
-      <div class="cardBody">
-        <p class="cardName">${f.full_name} ${f.id === myFighterId ? '<span class="youTag">YOU</span>' : ''}</p>
-        <div class="cardMeta">
-          <span class="pill ${pro ? 'pill-pro' : 'pill-amateur'}">${pro ? 'PROFESSIONAL' : 'AMATEUR'}</span>
-          <span>${f.wins}-${f.losses}${f.draws ? '-' + f.draws : ''}</span>
+    <div class="fightCard">
+      <div class="fcBanner">
+        <span class="fcDiv">${pro ? 'Pro Boxer' : 'Amateur Boxer'}</span>
+        ${f.id === myFighterId ? '<span class="youTag">YOU</span>' : ''}
+      </div>
+      <div class="fcGhost">LEGACY</div>
+      <div class="fcTop">
+        <div class="fcPhotoWrap">
+          ${photo}
+          <span class="dvBadge">${pro ? 'Professional Boxer' : 'Amateur Boxer'}</span>
         </div>
-        <div class="cardMeta" style="margin-top:4px;">${f.gym_name}${f.division_label ? ' &middot; ' + f.division_label : ''}</div>
+        <div style="flex:1; min-width:0;">
+          <h3 class="fcName">${f.full_name}</h3>
+          <div class="fcMeta">${meta}</div>
+          <div class="fcMeta">${f.gym_name || ''}</div>
+        </div>
+      </div>
+      <div class="fcRecordRow">
+        <div class="fcRec"><span>${f.wins}</span><small>Wins</small></div>
+        <div class="fcRec"><span>${f.losses}</span><small>Losses</small></div>
+        <div class="fcRec"><span>${f.draws}</span><small>Draws</small></div>
       </div>
     </div>`;
   }).join('');
