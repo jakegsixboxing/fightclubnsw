@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Fighter Nominations — Fight Club Central Coast</title>
 <link rel="icon" href="favicon-32.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-title" content="FighterHub">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Anton&family=Oswald:wght@600;700&display=swap" rel="stylesheet">
@@ -163,6 +165,25 @@
   .eventVal { font-size:13px; color:var(--white); font-weight:600; }
 
   .loading { text-align:center; color:var(--steel); padding:60px 0; font-size:13px; }
+
+  /* matchmaker card */
+  .mmBlurb { color:var(--steel); font-size:12.5px; margin-top:14px; line-height:1.6; }
+  .mmTypes { display:flex; gap:8px; flex-wrap:wrap; margin-top:12px; }
+
+  /* promoter chat */
+  .chatOverlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.75); z-index:200; align-items:flex-end; justify-content:center; }
+  .chatOverlay.open { display:flex; }
+  .chatPanel { width:100%; max-width:560px; height:78vh; background:#0e0e0d; border:1px solid var(--gold-soft); border-radius:22px 22px 0 0; display:flex; flex-direction:column; overflow:hidden; }
+  .chatHead { display:flex; align-items:center; justify-content:space-between; padding:16px 18px; border-bottom:1px solid rgba(255,255,255,0.08); background:rgba(217,174,69,0.06); }
+  .chatHead b { font-family:'Oswald',sans-serif; font-size:15px; letter-spacing:1.5px; text-transform:uppercase; color:var(--gold); }
+  .chatMsgs { flex:1; overflow-y:auto; padding:16px; display:flex; flex-direction:column; gap:10px; }
+  .msg { max-width:80%; padding:10px 14px; border-radius:16px; font-size:13.5px; line-height:1.45; }
+  .msg.me { align-self:flex-end; background:var(--gold); color:#100c00; border-bottom-right-radius:4px; }
+  .msg.them { align-self:flex-start; background:#1c1c1a; color:var(--white); border:1px solid rgba(255,255,255,0.08); border-bottom-left-radius:4px; }
+  .msg small { display:block; font-size:9px; opacity:.6; margin-top:4px; }
+  .chatInputRow { display:flex; gap:8px; padding:12px; border-top:1px solid rgba(255,255,255,0.08); }
+  .chatInputRow input { flex:1; background:#0a0a09; border:1px solid rgba(255,255,255,0.14); border-radius:999px; padding:11px 16px; color:var(--white); font-family:inherit; font-size:13.5px; }
+  .chatInputRow input:focus { outline:none; border-color:var(--gold-soft); }
 </style>
 </head>
 <body>
@@ -350,6 +371,20 @@
       </div>
     </div>
   </section>
+</div>
+
+<div class="chatOverlay" id="chatOverlay">
+  <div class="chatPanel">
+    <div class="chatHead">
+      <b id="chatTitle">Contact Promoter</b>
+      <button class="backBtn" onclick="closeChat()">Close</button>
+    </div>
+    <div class="chatMsgs" id="chatMsgs"></div>
+    <div class="chatInputRow">
+      <input id="chatInput" placeholder="Type a message&hellip;" maxlength="2000" onkeydown="if(event.key==='Enter')sendChat()">
+      <button class="btn solid" onclick="sendChat()">Send</button>
+    </div>
+  </div>
 </div>
 
 <script type="module">
@@ -568,8 +603,35 @@ async function loadAdmin(){
   if (error){ el.textContent = 'Couldn’t load records: ' + error.message; return; }
   if (!data || !data.length){ el.className = 'emptyState'; el.textContent = 'No registrations yet.'; return; }
   const esc = s => (s == null || s === '') ? '<span style="opacity:.4">—</span>' : String(s).replace(/</g,'&lt;');
+
+  // message threads
+  let threadsHtml = '';
+  try {
+    const { data: msgs } = await sb.from('pf_messages').select('*').order('created_at', { ascending: false });
+    if (msgs && msgs.length){
+      const byUid = {};
+      msgs.forEach(m => { (byUid[m.fighter_user_id] = byUid[m.fighter_user_id] || []).push(m); });
+      const nameByUid = {};
+      data.forEach(f => { if (f.user_id) nameByUid[f.user_id] = f.full_name; });
+      threadsHtml = '<div style="max-width:720px; margin:0 auto 26px;"><h3 style="font-family:Oswald,sans-serif; color:var(--gold); letter-spacing:2px; text-transform:uppercase; font-size:15px;">Messages</h3>' +
+        Object.entries(byUid).map(([uid, list]) => {
+          const last = list[0];
+          const unread = list.filter(m => m.sender === 'fighter' && !m.read_by_admin).length;
+          return `<div class="fightCard" style="margin-bottom:14px; cursor:pointer;" onclick="openChat('${uid}')">
+            <div style="display:flex; justify-content:space-between; align-items:center; gap:10px;">
+              <div style="min-width:0;">
+                <b style="font-family:Oswald,sans-serif; letter-spacing:1px; text-transform:uppercase;">${esc(nameByUid[uid] || 'Fighter')}</b>
+                <div style="color:var(--steel); font-size:12px; margin-top:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${esc(last.body)}</div>
+              </div>
+              ${unread ? `<span class="youTag">${unread} NEW</span>` : '<span style="color:var(--steel); font-size:18px;">&#8250;</span>'}
+            </div>
+          </div>`;
+        }).join('') + '</div>';
+    }
+  } catch(e){ /* messages table optional */ }
+
   el.className = '';
-  el.innerHTML = '<div style="max-width:720px; margin:0 auto;">' + data.map(f => `
+  el.innerHTML = threadsHtml + '<div style="max-width:720px; margin:0 auto;">' + data.map(f => `
     <div class="fightCard" style="margin-bottom:20px;">
       <div class="fcBanner">
         <span class="fcDiv">${f.boxer_type === 'professional' ? 'Pro' : f.boxer_type === 'amateur' ? 'Amateur' : 'Challenger'} &middot; Full Record</span>
@@ -610,28 +672,55 @@ async function loadRoster(){
     .order('updated_at', { ascending: false });
   if (flatErr){ rosterEl.textContent = 'Couldn’t load fighters — try again shortly.'; return; }
 
-  window.__allowedIds = new Set((flat || []).map(f => f.id));
+  const MATCHMAKER_ID = 5;
+  const fightersOnly = (flat || []).filter(f => f.id !== MATCHMAKER_ID);
+  window.__allowedIds = new Set(fightersOnly.map(f => f.id));
 
-  if (!flat || !flat.length){
+  const matchmakerCard = `
+    <div class="fightCard">
+      <div class="fcBanner"><span class="fcDiv">Matchmaker</span></div>
+      <div class="fcGhost">LEGACY</div>
+      <div class="fcTop">
+        <div style="flex:1; min-width:0;">
+          <h3 class="fcName">Jake Williamson</h3>
+          <div class="fcMeta">Legacy Gym &middot; Promoter &amp; Matchmaker</div>
+          <div class="mmTypes">
+            <span class="pill pill-amateur">CORPORATE BOXERS</span>
+            <span class="pill pill-amateur">AMATEUR BOXERS</span>
+            <span class="pill pill-pro">PROFESSIONAL BOXERS</span>
+          </div>
+        </div>
+      </div>
+      <div class="fcRecordRow" style="grid-template-columns: 1fr;">
+        <div class="fcRec"><span>35</span><small>Shows Run</small></div>
+      </div>
+      <p class="mmBlurb">For any information or questions, drop me a message.</p>
+      <div style="margin-top:14px;">
+        <button class="btn solid" onclick="openChat()">Contact Promoter</button>
+      </div>
+    </div>`;
+
+  if (!fightersOnly.length){
     statsEl.innerHTML = '';
-    rosterEl.className = 'emptyState';
-    rosterEl.textContent = 'No fighters nominated yet — yours will be the first profile on the board.';
+    rosterEl.className = 'grid';
+    rosterEl.innerHTML = matchmakerCard + '<div class="emptyState">No fighters nominated yet — yours will be the first profile on the board.</div>';
     return;
   }
+  const flatList = fightersOnly;
 
   window.__flatById = {};
-  flat.forEach(f => { window.__flatById[f.id] = f; });
+  flatList.forEach(f => { window.__flatById[f.id] = f; });
 
-  const amateurs = flat.filter(f => f.boxer_type === 'amateur').length;
-  const pros = flat.length - amateurs;
+  const amateurs = flatList.filter(f => f.boxer_type === 'amateur').length;
+  const pros = flatList.length - amateurs;
   statsEl.innerHTML = `
     <div class="chip silver"><b>${flat.length}</b> NOMINATED</div>
     <div class="chip silver"><b>${amateurs}</b> AMATEUR &middot; <b>${pros}</b> PRO</div>
     <div class="chip silver">NEXT CARD &middot; <b>SAT 10 OCT 2026</b></div>`;
 
-  const sorted = [...flat.filter(f => f.id === myFighterId), ...flat.filter(f => f.id !== myFighterId)];
+  const sorted = [...flatList.filter(f => f.id === myFighterId), ...flatList.filter(f => f.id !== myFighterId)];
   rosterEl.className = 'grid';
-  rosterEl.innerHTML = sorted.map(f => {
+  rosterEl.innerHTML = matchmakerCard + sorted.map(f => {
     const pro = f.boxer_type === 'professional';
     const initial = (f.full_name||'?').trim()[0] || '?';
     const photo = f.photo_path
@@ -748,6 +837,59 @@ async function loadMatches(){
     matchesEl.innerHTML = matched.map(m => matchCardHtml(m, 'matched')).join('');
   }
 }
+
+/* ---------- promoter chat (fighter side) ---------- */
+let chatThreadUid = null;   // which fighter thread the panel is showing (admin can switch)
+
+window.openChat = async function(threadUid){
+  const { data: authData } = await sb.auth.getUser();
+  const myUid = authData && authData.user ? authData.user.id : null;
+  if (!myUid) return;
+  chatThreadUid = threadUid || myUid;
+  document.getElementById('chatTitle').textContent = threadUid && isAdmin ? 'Reply to Fighter' : 'Contact Promoter';
+  document.getElementById('chatOverlay').classList.add('open');
+  await loadChat();
+};
+
+window.closeChat = function(){
+  document.getElementById('chatOverlay').classList.remove('open');
+  chatThreadUid = null;
+};
+
+async function loadChat(){
+  const box = document.getElementById('chatMsgs');
+  box.innerHTML = '<div class="loading">Loading&hellip;</div>';
+  const { data, error } = await sb.from('pf_messages')
+    .select('*')
+    .eq('fighter_user_id', chatThreadUid)
+    .order('created_at', { ascending: true });
+  if (error){ box.innerHTML = '<div class="loading">Couldn’t load messages.</div>'; return; }
+  const mineIsAdmin = isAdmin && chatThreadUid !== null;
+  if (!data || !data.length){
+    box.innerHTML = '<div class="loading">No messages yet — say g’day.</div>';
+    return;
+  }
+  box.innerHTML = data.map(m => {
+    const isMine = isAdmin ? (m.sender === 'admin') : (m.sender === 'fighter');
+    const t = new Date(m.created_at);
+    return `<div class="msg ${isMine ? 'me' : 'them'}">${m.body.replace(/</g,'&lt;')}<small>${m.sender === 'admin' ? 'Jake — Promoter' : 'Fighter'} &middot; ${t.toLocaleDateString()} ${t.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</small></div>`;
+  }).join('');
+  box.scrollTop = box.scrollHeight;
+}
+
+window.sendChat = async function(){
+  const input = document.getElementById('chatInput');
+  const body = input.value.trim();
+  if (!body || !chatThreadUid) return;
+  const { error } = await sb.from('pf_messages').insert({
+    fighter_user_id: chatThreadUid,
+    sender: isAdmin ? 'admin' : 'fighter',
+    body
+  });
+  if (error){ alert('Couldn’t send: ' + error.message); return; }
+  input.value = '';
+  await loadChat();
+};
 
 window.respondMatch = async function(matchId, response){
   const { error } = await sb.rpc('pf_respond_to_match', { p_match_id: matchId, p_response: response });
