@@ -273,13 +273,18 @@
 
       <h3>Profile Photo <span style="color:var(--red);">*</span></h3>
       <div class="fGroup" style="margin-bottom:4px;">
-        <div class="photoDrop" id="photoDrop" onclick="document.getElementById('photoInput').click()">
-          <div id="photoPreviewWrap" style="display:none; margin-bottom:10px;">
-            <img id="photoPreview" style="width:84px; height:84px; border-radius:50%; object-fit:cover; border:2px solid var(--gold);" alt="">
+        <div class="photoDrop" id="photoDrop">
+          <div id="photoPreviewWrap" style="display:none; margin-bottom:12px;">
+            <img id="photoPreview" style="width:96px; height:96px; border-radius:14px; object-fit:cover; border:2px solid var(--gold);" alt="">
           </div>
-          <span id="photoDropText">Tap to take your profile photo</span>
+          <span id="photoDropText">Add your fighter photo &mdash; this is what shows on the roster</span>
+          <div style="display:flex; gap:10px; justify-content:center; margin-top:14px; flex-wrap:wrap;">
+            <button type="button" class="btn" onclick="document.getElementById('photoInputCam').click()">&#128247; Take a Photo</button>
+            <button type="button" class="btn ghost" onclick="document.getElementById('photoInputLib').click()">&#128193; Upload a Photo</button>
+          </div>
         </div>
-        <input type="file" id="photoInput" accept="image/*" capture="user" style="display:none;">
+        <input type="file" id="photoInputCam" accept="image/*" capture="user" style="display:none;">
+        <input type="file" id="photoInputLib" accept="image/*" style="display:none;">
         <p id="photoError" style="display:none; color:#e08a8a; font-size:12px; margin:8px 0 0;">You need a profile photo before you can submit &mdash; other fighters and coaches see this on the roster.</p>
       </div>
 
@@ -308,6 +313,7 @@
       <button class="appTab" data-tab="offers" onclick="showTab('offers')">Fight Offers</button>
       <button class="appTab" data-tab="matches" onclick="showTab('matches')">Matched Fights</button>
       <button class="appTab" data-tab="event" onclick="showTab('event')">Event Info</button>
+      <button class="appTab" data-tab="admin" id="adminTabBtn" style="display:none; border-color: rgba(168,40,40,0.6); color:#e08a8a;" onclick="showTab('admin')">Admin</button>
     </div>
 
     <div class="tabPanel active" data-tab="roster">
@@ -321,6 +327,10 @@
 
     <div class="tabPanel" data-tab="matches">
       <div id="matchesContent" class="loading">Loading matches&hellip;</div>
+    </div>
+
+    <div class="tabPanel" data-tab="admin">
+      <div id="adminContent" class="loading">Loading full fighter records&hellip;</div>
     </div>
 
     <div class="tabPanel" data-tab="event">
@@ -363,6 +373,7 @@ const TAB_HEADERS = {
   offers:  { title:'Fight Offers', sub:'Bouts offered — waiting on fighter approval.' },
   matches: { title:'Matched Fights', sub:'Locked-in bouts for Clash on the Coast.' },
   event:   { title:'Event Info', sub:'Everything you need for fight night.' },
+  admin:   { title:'Admin — Full Records', sub:'Private. Complete registration details, visible only to you.' },
 };
 window.showTab = function(id){
   document.querySelectorAll('.tabPanel').forEach(p => p.classList.toggle('active', p.dataset.tab === id));
@@ -416,7 +427,7 @@ document.querySelectorAll('#boxerTypeRow .radioPill').forEach(p => {
 
 /* ---------- photo (required) ---------- */
 let photoBlob = null;
-document.getElementById('photoInput').addEventListener('change', function(){
+function handlePhotoInput(){
   const file = this.files && this.files[0];
   if (!file) return;
   const img = new Image();
@@ -438,7 +449,9 @@ document.getElementById('photoInput').addEventListener('change', function(){
     }, 'image/jpeg', 0.85);
   };
   img.src = URL.createObjectURL(file);
-});
+}
+document.getElementById('photoInputCam').addEventListener('change', handlePhotoInput);
+document.getElementById('photoInputLib').addEventListener('change', handlePhotoInput);
 
 /* ---------- registration ---------- */
 window.doRegister = async function(){
@@ -530,11 +543,52 @@ window.doLogout = async function(){
 /* ---------- the app ---------- */
 let myFighterId = null;
 
+let isAdmin = false;
+
 async function enterApp(){
   showScreen('app');
   showTab('roster');
   await loadRoster();
   loadMatches();
+  try {
+    const { data } = await sb.rpc('pf_is_admin');
+    isAdmin = data === true;
+  } catch(e){ isAdmin = false; }
+  document.getElementById('adminTabBtn').style.display = isAdmin ? 'inline-block' : 'none';
+  if (isAdmin) loadAdmin();
+}
+
+async function loadAdmin(){
+  const el = document.getElementById('adminContent');
+  el.className = 'loading'; el.textContent = 'Loading full fighter records…';
+  const { data, error } = await sb.from('pf_fighters')
+    .select('*')
+    .not('user_id', 'is', null)
+    .order('updated_at', { ascending: false });
+  if (error){ el.textContent = 'Couldn’t load records: ' + error.message; return; }
+  if (!data || !data.length){ el.className = 'emptyState'; el.textContent = 'No registrations yet.'; return; }
+  const esc = s => (s == null || s === '') ? '<span style="opacity:.4">—</span>' : String(s).replace(/</g,'&lt;');
+  el.className = '';
+  el.innerHTML = '<div style="max-width:720px; margin:0 auto;">' + data.map(f => `
+    <div class="fightCard" style="margin-bottom:20px;">
+      <div class="fcBanner">
+        <span class="fcDiv">${f.boxer_type === 'professional' ? 'Pro' : f.boxer_type === 'amateur' ? 'Amateur' : 'Challenger'} &middot; Full Record</span>
+        <span style="font-size:10px; color:var(--steel);">ID ${f.id}</span>
+      </div>
+      <h3 class="fcName" style="margin-bottom:14px;">${esc(f.full_name)}</h3>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px 18px; font-size:12.5px; color:var(--white);">
+        <div><span style="color:var(--steel); font-size:10px; letter-spacing:1px; text-transform:uppercase; display:block;">Fighter Mobile</span>${esc(f.mobile)}</div>
+        <div><span style="color:var(--steel); font-size:10px; letter-spacing:1px; text-transform:uppercase; display:block;">Date of Birth</span>${esc(f.date_of_birth)}</div>
+        <div><span style="color:var(--steel); font-size:10px; letter-spacing:1px; text-transform:uppercase; display:block;">Coach</span>${esc(f.coach_name)}</div>
+        <div><span style="color:var(--steel); font-size:10px; letter-spacing:1px; text-transform:uppercase; display:block;">Coach Mobile</span>${esc(f.coach_mobile)}</div>
+        <div><span style="color:var(--steel); font-size:10px; letter-spacing:1px; text-transform:uppercase; display:block;">Gym</span>${esc(f.gym_name)}</div>
+        <div><span style="color:var(--steel); font-size:10px; letter-spacing:1px; text-transform:uppercase; display:block;">Gym Postcode</span>${esc(f.gym_postcode)}</div>
+        <div><span style="color:var(--steel); font-size:10px; letter-spacing:1px; text-transform:uppercase; display:block;">CSA Number</span>${esc(f.combat_sports_number)}</div>
+        <div><span style="color:var(--steel); font-size:10px; letter-spacing:1px; text-transform:uppercase; display:block;">Stance</span>${esc(f.stance)}</div>
+        <div><span style="color:var(--steel); font-size:10px; letter-spacing:1px; text-transform:uppercase; display:block;">Record</span>${f.wins}-${f.losses}-${f.draws} &middot; ${f.ko_tko_wins} KO &middot; ${f.exhibition_bouts} exh</div>
+        <div><span style="color:var(--steel); font-size:10px; letter-spacing:1px; text-transform:uppercase; display:block;">Registered</span>${esc((f.updated_at||'').slice(0,10))}</div>
+      </div>
+    </div>`).join('') + '</div>';
 }
 
 async function loadRoster(){
@@ -545,29 +599,25 @@ async function loadRoster(){
   const { data: authData } = await sb.auth.getUser();
   const myUid = authData && authData.user ? authData.user.id : null;
 
-  const { data: base, error: baseErr } = await sb.from('pf_fighters')
-    .select('id, user_id, boxer_type')
+  // my own row (RLS: fighters can only read their own full record)
+  const { data: mineRows } = await sb.from('pf_fighters').select('id, user_id').eq('user_id', myUid);
+  myFighterId = (mineRows && mineRows[0]) ? mineRows[0].id : null;
+
+  // public-safe roster view: boxing info only
+  const { data: flat, error: flatErr } = await sb.from('pf_roster')
+    .select('*')
     .in('boxer_type', ['amateur','professional'])
-    .not('user_id', 'is', null);
-  if (baseErr){ rosterEl.textContent = 'Couldn’t load fighters — pull to refresh or try again shortly.'; return; }
+    .order('updated_at', { ascending: false });
+  if (flatErr){ rosterEl.textContent = 'Couldn’t load fighters — try again shortly.'; return; }
 
-  const ids = base.map(f => f.id);
-  window.__allowedIds = new Set(ids);
-  const mine = base.find(f => f.user_id === myUid);
-  myFighterId = mine ? mine.id : null;
+  window.__allowedIds = new Set((flat || []).map(f => f.id));
 
-  if (!ids.length){
+  if (!flat || !flat.length){
     statsEl.innerHTML = '';
     rosterEl.className = 'emptyState';
     rosterEl.textContent = 'No fighters nominated yet — yours will be the first profile on the board.';
     return;
   }
-
-  const { data: flat, error: flatErr } = await sb.from('pf_fighters_flat')
-    .select('id, full_name, photo_path, gym_name, boxer_type, wins, losses, draws, division_label, stance, date_of_birth')
-    .in('id', ids)
-    .order('updated_at', { ascending: false });
-  if (flatErr){ rosterEl.textContent = 'Couldn’t load fighters — try again shortly.'; return; }
 
   window.__flatById = {};
   flat.forEach(f => { window.__flatById[f.id] = f; });
@@ -587,8 +637,7 @@ async function loadRoster(){
     const photo = f.photo_path
       ? `<img class="fcPhoto" src="${f.photo_path}" alt="" onerror="this.outerHTML='<div class=&quot;fcPhoto fcPhotoEmpty&quot;>${initial}</div>'">`
       : `<div class="fcPhoto fcPhotoEmpty">${initial}</div>`;
-    const age = f.age ? f.age + ' yrs' : (f.date_of_birth ? Math.floor((Date.now() - new Date(f.date_of_birth).getTime()) / 31557600000) + ' yrs' : '');
-    const meta = [f.division_label ? f.division_label.replace(/\s*\(.*\)$/, '') : '', f.stance || '', age, f.current_weight ? f.current_weight + 'kg now' : '']
+    const meta = [f.division_label ? f.division_label.replace(/\s*\(.*\)$/, '') : '', f.stance || '', f.age ? f.age + ' yrs' : '', f.current_weight ? f.current_weight + 'kg now' : '']
       .filter(Boolean).join(' &middot; ');
     return `
     <div class="fightCard">
